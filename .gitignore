@@ -1,0 +1,9 @@
+# macOS clutter
+.DS_Store
+
+# Editor/system files
+*.swp
+.vscode/
+
+# Logs
+*.log

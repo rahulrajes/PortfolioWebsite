@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rahul Rajesh</title>
+  <meta name="description" content="Rahul Rajesh — student, researcher, photographer. Math & CS/AI at ASU Barrett Honors." />
+
+  <!-- Prevent a flash of the wrong theme: set the saved theme BEFORE the page
+       paints. This tiny script runs immediately (it's in the <head>). -->
+  <script>
+    if (localStorage.getItem("theme") === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  </script>
+
+  <!-- Fonts (loaded from Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ======================= NAVBAR =======================
+       This same nav appears on all three pages. For now we copy it into each
+       file (simplest approach while learning). aria-current="page" marks the
+       page we're currently on. -->
+  <header class="nav">
+    <nav class="nav__inner container">
+      <a href="index.html" class="nav__brand">RR</a>
+      <div class="nav__links">
+        <a href="index.html" aria-current="page">Home</a>
+        <a href="about.html">About</a>
+        <a href="work.html">Work</a>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme">☾</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ======================= HERO =======================
+         The big stacked name. Right now this is the STATIC fallback: a clean
+         "Rahul / Rajesh" with the normal dotted "j". Later, a background-removed
+         video layers on top of .last so Rahul appears to lie on "ajes" and the
+         tossed ball becomes the dot on the j. -->
+    <section class="hero container">
+      <h1 class="hero__name">
+        <span class="line first">Rahul</span>
+        <span class="line last">Rajesh</span>
+      </h1>
+
+      <p class="hero__subtitle">
+        I'm a <span class="rotator">student</span>.
+      </p>
+
+      <p class="hero__intro">
+        Math &amp; Statistics + Computer Science (AI) at Barrett, The Honors College
+        at Arizona State. I build things with data and machine learning — and away
+        from the screen, I'm usually behind a camera.
+      </p>
+
+      <div class="hero__cta">
+        <a href="work.html" class="btn btn--primary">See my work →</a>
+        <a href="about.html" class="btn btn--ghost">About me</a>
+      </div>
+    </section>
+
+    <!-- ======================= "CURRENTLY" =======================
+         A short, personal snapshot. .reveal makes it fade in on scroll. -->
+    <section class="section container">
+      <div class="reveal">
+        <p class="section__label">Currently</p>
+        <h2>A few things I'm up to</h2>
+        <div class="grid grid--auto" style="margin-top: var(--space-3);">
+          <div class="card">
+            <p class="card__meta">Research</p>
+            <h3 class="card__title">Robotics &amp; RL Lab</h3>
+            <p>Building a ROS2 velocity-estimation pipeline for a biomimetic quadruped, and training computer-vision models for biosecurity screening.</p>
+          </div>
+          <div class="card">
+            <p class="card__meta">Incoming</p>
+            <h3 class="card__title">EssilorLuxottica</h3>
+            <p>Data Analytics + AI intern in NYC — ETL pipelines in R and a RAG-based analytics assistant.</p>
+          </div>
+          <div class="card">
+            <p class="card__meta">Off the clock</p>
+            <h3 class="card__title">Wildlife &amp; portraits</h3>
+            <p>Chasing light with a camera — animals in the wild, and lately, people.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================= FOOTER ======================= -->
+  <footer class="footer">
+    <div class="footer__inner container">
+      <span>© 2026 Rahul Rajesh</span>
+      <span>
+        <a href="https://www.linkedin.com/in/rahulrajesh123" target="_blank" rel="noopener">LinkedIn</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/rahulrajes" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

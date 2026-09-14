@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — Rahul Rajesh</title>
+  <meta name="description" content="About Rahul Rajesh — the academic side and the human side." />
+
+  <script>
+    if (localStorage.getItem("theme") === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <header class="nav">
+    <nav class="nav__inner container">
+      <a href="index.html" class="nav__brand">RR</a>
+      <div class="nav__links">
+        <a href="index.html">Home</a>
+        <a href="about.html" aria-current="page">About</a>
+        <a href="work.html">Work</a>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme">☾</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Page intro -->
+    <section class="section container">
+      <p class="section__label">About</p>
+      <h1 style="font-size: clamp(2.5rem, 7vw, 4.5rem); letter-spacing: -0.03em;">
+        Two sides of the same person.
+      </h1>
+      <p class="lead">
+        Half of me lives in equations, code, and research questions. The other half
+        is outside with a camera. This page is both.
+      </p>
+    </section>
+
+    <!-- The academic side -->
+    <section class="section container reveal">
+      <p class="section__label">The academic side</p>
+      <div class="prose">
+        <p>
+          I'm at Barrett, The Honors College at Arizona State, pursuing a B.S. in
+          Math (Statistics) and a B.S. in Computer Science (Artificial Intelligence),
+          with a minor in Studio Art — graduating May 2028.
+        </p>
+        <p>
+          I'm drawn to the places where math, data, and machine learning meet real
+          systems: reinforcement learning and simulation for robots, computer vision,
+          retrieval-augmented AI, and the unglamorous-but-crucial work of turning
+          messy data into something trustworthy. I'm a Tillman Scholar and President's
+          Scholar, and I've kept a 4.0 while chasing most of these rabbit holes.
+        </p>
+      </div>
+    </section>
+
+    <!-- The human side -->
+    <section class="section container reveal">
+      <p class="section__label">The human side</p>
+      <div class="grid grid--auto">
+        <div class="card">
+          <h3 class="card__title">Photography</h3>
+          <p>
+            My favorite thing to do. I started with wildlife — the patience of waiting
+            for an animal to do something honest — and I've been moving into human
+            photography, which asks for a different kind of patience.
+          </p>
+        </div>
+        <div class="card">
+          <h3 class="card__title">Art</h3>
+          <p>
+            The Studio Art minor isn't an accident. I like making things with my hands
+            and my eye, not just my keyboard — it feeds the way I see everything else.
+          </p>
+        </div>
+        <div class="card">
+          <h3 class="card__title">Sports</h3>
+          <p>
+            Varsity basketball and soccer in high school. A knee injury slowed that
+            down, so these days it's mostly intramural volleyball — still competitive,
+            just easier on the joints.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section container reveal">
+      <div class="card" style="text-align:center;">
+        <h2>Want the short, formal version?</h2>
+        <p class="lead" style="margin-inline:auto;">Head to my work, or grab the résumé.</p>
+        <div class="hero__cta" style="justify-content:center;">
+          <a href="work.html" class="btn btn--primary">See my work →</a>
+          <a href="assets/RR_Resume.pdf" class="btn btn--ghost" target="_blank" rel="noopener">Résumé (PDF)</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__inner container">
+      <span>© 2026 Rahul Rajesh</span>
+      <span>
+        <a href="https://www.linkedin.com/in/rahulrajesh123" target="_blank" rel="noopener">LinkedIn</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/rahulrajes" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

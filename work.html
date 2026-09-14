@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Work — Rahul Rajesh</title>
+  <meta name="description" content="Rahul Rajesh's projects, research, and experience in ML, data, and robotics." />
+
+  <script>
+    if (localStorage.getItem("theme") === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <header class="nav">
+    <nav class="nav__inner container">
+      <a href="index.html" class="nav__brand">RR</a>
+      <div class="nav__links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="work.html" aria-current="page">Work</a>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme">☾</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Page intro -->
+    <section class="section container">
+      <p class="section__label">Work</p>
+      <h1 style="font-size: clamp(2.5rem, 7vw, 4.5rem); letter-spacing: -0.03em;">
+        Research, projects &amp; experience.
+      </h1>
+      <p class="lead">
+        Mostly machine learning, data, and robotics — from RAG pipelines to a quadruped
+        robot to a D1 soccer analytics role. Here's a selection.
+      </p>
+      <div class="hero__cta">
+        <a href="assets/RR_Resume.pdf" class="btn btn--primary" target="_blank" rel="noopener">Download résumé (PDF)</a>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section class="section container reveal">
+      <p class="section__label">Experience</p>
+      <h2>Where I've worked</h2>
+      <div class="grid grid--2" style="margin-top: var(--space-3);">
+
+        <div class="card">
+          <p class="card__meta">EssilorLuxottica · New York City · May–Jul 2026</p>
+          <h3 class="card__title">Data Analytics + AI Intern</h3>
+          <ul>
+            <li>Built an automated ETL pipeline in R that ingests messy SAP/Hyperion extracts and powers a live Tableau dashboard — cutting turnaround from ~4 hours to ~15 minutes.</li>
+            <li>Contributed to an internal RAG analytics assistant: a containerized BGE embedding pipeline (BigQuery → pgvector) plus a BGE reranker that improved retrieval relevance.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <p class="card__meta">Robotics Actuators &amp; Dynamics Lab (Prof. Jiefeng Sun) · Tempe · Jul 2025–Present</p>
+          <h3 class="card__title">Simulations &amp; Reinforcement Learning Lead</h3>
+          <ul>
+            <li>Developing a ROS2 velocity-estimation pipeline for a biomimetic quadruped, fusing IMU + OptiTrack motion capture with a Kalman filter.</li>
+            <li>Training YOLO/Ultralytics vision models to detect invasive Diamondback Moths for a border biosecurity screening system.</li>
+            <li>Built high-fidelity Isaac Sim &amp; MuJoCo simulations of a high-DOF spined quadruped for locomotion and stability research.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <p class="card__meta">ASU D1 Women's Soccer · Tempe · Dec 2025–May 2026</p>
+          <h3 class="card__title">Student Manager + Statistical Analyst</h3>
+          <ul>
+            <li>Built Python (Pandas/NumPy) pipelines to clean and normalize multi-source player-tracking and event data across seasons.</li>
+            <li>Computed availability metrics and percentile-based summaries to support roster evaluation and tactical scouting.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <p class="card__meta">Solar Devils · Tempe · Aug 2024–May 2025 · 1st place, ASU Change the World 2024</p>
+          <h3 class="card__title">Integrations Team Member</h3>
+          <ul>
+            <li>Built a SQLite3 + Python pipeline to ingest and query CAN-bus telemetry from a solar-powered vehicle.</li>
+            <li>Exposed vehicle data to on-board visualization for real-time performance analysis and troubleshooting.</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section class="section container reveal">
+      <p class="section__label">Projects</p>
+      <h2>Things I've built</h2>
+      <div class="grid grid--auto" style="margin-top: var(--space-3);">
+
+        <div class="card">
+          <p class="card__meta">Solo · Feb 2026</p>
+          <h3 class="card__title">Simple Banking System</h3>
+          <p>A layered Spring Boot REST API (Controller–Service–Repository) with Spring Data JPA + Hibernate, MySQL via HikariCP, DTO mapping, and exception handling — tested end-to-end with Postman.</p>
+        </div>
+
+        <div class="card">
+          <p class="card__meta">Team Lead · Mar 2025 · 2nd place, DevHacks × Strategy</p>
+          <h3 class="card__title">ReThread</h3>
+          <p>A Chrome extension that uses computer vision + keyword matching to spot fashion products and surface sustainable resale alternatives (Poshmark) in real time, built on Google Cloud Vision.</p>
+        </div>
+
+        <div class="card">
+          <p class="card__meta">Team Member · Mar 2025 · ScaleU + Principled Innovation Academy</p>
+          <h3 class="card__title">Campus Compass</h3>
+          <p>An AI agent chatbot (Python + AWS Bedrock) that helps students find campus activities matched to their interests and major, with a knowledge base scraped from ASU's SunDevilSync.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section class="section container reveal">
+      <p class="section__label">Toolbox</p>
+      <h2>Skills</h2>
+      <div style="margin-top: var(--space-3);">
+        <p class="card__meta">Languages</p>
+        <p>
+          <span class="tag">Java</span><span class="tag">Python</span><span class="tag">C</span>
+          <span class="tag">C++</span><span class="tag">SQL</span><span class="tag">R</span>
+        </p>
+        <p class="card__meta">AI / ML &amp; RAG</p>
+        <p>
+          <span class="tag">Pandas</span><span class="tag">NumPy</span><span class="tag">pgvector</span>
+          <span class="tag">BGE embeddings</span><span class="tag">Reranking</span><span class="tag">LangGraph</span>
+          <span class="tag">MuJoCo</span><span class="tag">Isaac Sim</span><span class="tag">YOLO / Ultralytics</span>
+        </p>
+        <p class="card__meta">Frameworks &amp; backend</p>
+        <p>
+          <span class="tag">Spring Boot</span><span class="tag">Spring Data JPA</span><span class="tag">Hibernate</span>
+          <span class="tag">Docker</span><span class="tag">JavaFX</span><span class="tag">Maven</span><span class="tag">Postman</span>
+        </p>
+        <p class="card__meta">Infra &amp; data</p>
+        <p>
+          <span class="tag">PostgreSQL</span><span class="tag">BigQuery</span><span class="tag">Pub/Sub</span>
+          <span class="tag">Tableau</span><span class="tag">ROS2</span><span class="tag">MATLAB</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- RESUME EMBED -->
+    <section class="section container reveal">
+      <p class="section__label">Résumé</p>
+      <h2>The one-pager</h2>
+      <p class="lead">Prefer the formal version? It's right here.</p>
+      <!-- <object> embeds the PDF inline; if the browser can't, the link inside shows. -->
+      <object data="assets/RR_Resume.pdf" type="application/pdf"
+              style="width:100%; height:80vh; border:1px solid var(--line); border-radius: var(--radius); margin-top: var(--space-2);">
+        <p style="padding: var(--space-3);">
+          Your browser can't display the embedded PDF —
+          <a href="assets/RR_Resume.pdf" target="_blank" rel="noopener">open it in a new tab instead</a>.
+        </p>
+      </object>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__inner container">
+      <span>© 2026 Rahul Rajesh</span>
+      <span>
+        <a href="https://www.linkedin.com/in/rahulrajesh123" target="_blank" rel="noopener">LinkedIn</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/rahulrajes" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

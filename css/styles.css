@@ -1,0 +1,304 @@
+/* ==========================================================================
+   Rahul Rajesh — portfolio styles
+   --------------------------------------------------------------------------
+   HOW THIS FILE IS ORGANIZED (read top to bottom):
+     1. Design tokens      — every color, font, and size as a variable
+     2. Light / dark themes — we only swap the token VALUES, nothing else
+     3. Base / reset        — sensible defaults for the whole page
+     4. Layout helpers      — the centered container, section spacing
+     5. Navbar
+     6. Hero (the big name + the "lying on the letters" trick)
+     7. Buttons & links
+     8. Sections / cards (About + Work pages)
+     9. Footer
+    10. Motion (scroll-reveal + reduced-motion safety)
+
+   KEY IDEA: A "CSS custom property" (a variable) is written --name: value;
+   and used later as var(--name). Because our colors are variables, switching
+   to dark mode is just redefining those variables once — see section 2.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. DESIGN TOKENS  (the light theme is the default set of values)
+   ========================================================================== */
+:root {
+  /* ---- Colors: light / beige theme (the site's primary look) ---- */
+  --bg:            #f4efe6;  /* soft warm beige — the page background       */
+  --bg-elevated:   #fbf8f2;  /* slightly lighter — cards sit on top of bg   */
+  --ink:           #10233a;  /* deep navy — main text (softer than black)   */
+  --ink-soft:      #43566d;  /* muted navy-grey — secondary text            */
+  --accent:        #1f5fbf;  /* the blue — links, highlights                */
+  --accent-strong: #0d1b2a;  /* darkest navy — strong emphasis              */
+  --line:          #ddd3c2;  /* hairline borders on beige                   */
+
+  /* ---- Typography ---- */
+  --font-display: "Space Grotesk", system-ui, sans-serif; /* big headings   */
+  --font-body:    "Inter", system-ui, sans-serif;         /* everything else*/
+
+  /* ---- Spacing scale (keeps rhythm consistent across the site) ---- */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2.5rem;
+  --space-5: 4rem;
+  --space-6: 6rem;
+
+  /* ---- Layout ---- */
+  --max-width: 1080px;      /* content never gets wider than this           */
+  --radius: 14px;           /* rounded corners on cards/buttons             */
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);   /* a smooth, slightly springy ease */
+  --theme-fade: 480ms;       /* how long the light<->dark color fade takes   */
+}
+
+/* ==========================================================================
+   2. DARK THEME
+   We put data-theme="dark" on the <html> element from JavaScript. When it's
+   there, these values REPLACE the ones above. Nothing else in the file has
+   to change — every rule already reads from these variables.
+   ========================================================================== */
+:root[data-theme="dark"] {
+  --bg:            #0d1b2a;  /* deep navy background                        */
+  --bg-elevated:   #14273c;  /* raised navy for cards                       */
+  --ink:           #f1ece1;  /* soft beige-white text                       */
+  --ink-soft:      #a9b6c6;  /* muted light blue-grey                       */
+  --accent:        #6ea8ff;  /* brighter blue so it pops on dark            */
+  --accent-strong: #f1ece1;
+  --line:          #26384d;
+}
+
+
+/* ==========================================================================
+   3. BASE / RESET
+   ========================================================================== */
+*, *::before, *::after { box-sizing: border-box; }  /* padding won't blow out widths */
+
+html { scroll-behavior: smooth; }                    /* nice anchor scrolling */
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  /* When the theme swaps, fade the colors instead of snapping instantly. */
+  transition: background var(--theme-fade) var(--ease),
+              color      var(--theme-fade) var(--ease);
+}
+
+img, video { max-width: 100%; display: block; }
+
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.05; margin: 0 0 var(--space-2); }
+h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.02em; }
+h3 { font-size: 1.25rem; }
+p  { margin: 0 0 var(--space-2); }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+
+/* ==========================================================================
+   4. LAYOUT HELPERS
+   ========================================================================== */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin-inline: auto;              /* center horizontally */
+  padding-inline: var(--space-3);   /* side gutters, never touches the edge */
+}
+
+.section { padding-block: var(--space-6); }        /* generous vertical breathing room */
+.section__label {                                   /* small ALL-CAPS label above a heading */
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: var(--space-1);
+}
+.lead { font-size: 1.25rem; color: var(--ink-soft); max-width: 60ch; }
+
+
+/* ==========================================================================
+   5. NAVBAR
+   ========================================================================== */
+.nav {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(8px);       /* frosted-glass effect over content */
+  border-bottom: 1px solid var(--line);
+}
+.nav__inner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+.nav__brand {
+  font-family: var(--font-display);
+  font-weight: 700; font-size: 1.1rem;
+  color: var(--ink); letter-spacing: -0.02em;
+}
+.nav__brand:hover { text-decoration: none; }
+.nav__links { display: flex; gap: var(--space-3); align-items: center; }
+.nav__links a { color: var(--ink-soft); font-weight: 500; }
+.nav__links a:hover,
+.nav__links a[aria-current="page"] { color: var(--ink); text-decoration: none; }
+
+/* Theme toggle button */
+.theme-toggle {
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  color: var(--ink);
+  border-radius: 999px;
+  width: 42px; height: 42px;
+  display: grid; place-items: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: transform 150ms var(--ease), border-color 150ms var(--ease);
+}
+.theme-toggle:hover { transform: rotate(-12deg) scale(1.05); border-color: var(--accent); }
+
+
+/* ==========================================================================
+   6. HERO  — the big stacked "Rahul / Rajesh" and the lying-on-letters trick
+   --------------------------------------------------------------------------
+   For now this shows the STATIC fallback (clean name with a normal dotted j).
+   Later we drop a background-removed video on top, positioned so Rahul lies
+   on "ajes" and the tossed ball becomes the dot on the j.
+   ========================================================================== */
+.hero {
+  min-height: calc(100vh - 74px);       /* fill the screen minus the navbar */
+  display: flex; flex-direction: column; justify-content: center;
+  padding-block: var(--space-5);
+}
+.hero__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  /* clamp() = responsive size: min, preferred (scales with viewport), max */
+  font-size: clamp(3.5rem, 15vw, 11rem);
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+.hero__name .line { display: block; }
+.hero__name .first { color: var(--ink-soft); }   /* "Rahul" a touch quieter */
+.hero__name .last  {
+  color: var(--ink);
+  position: relative;   /* anchor point for the video/ball layer later */
+}
+
+/* The rotating subtitle (student · researcher · photographer ...) */
+.hero__subtitle {
+  margin-top: var(--space-3);
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 3vw, 1.6rem);
+  color: var(--ink-soft);
+}
+.hero__subtitle .rotator { color: var(--accent); font-weight: 600; }
+
+.hero__intro { margin-top: var(--space-3); max-width: 52ch; font-size: 1.15rem; }
+.hero__cta { margin-top: var(--space-4); display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+
+/* ==========================================================================
+   7. BUTTONS
+   ========================================================================== */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.7rem 1.3rem;
+  border-radius: 999px;
+  font-weight: 600; font-family: var(--font-body);
+  cursor: pointer; border: 1px solid transparent;
+  transition: transform 150ms var(--ease), background 150ms var(--ease);
+}
+.btn:hover { text-decoration: none; transform: translateY(-2px); }
+.btn--primary { background: var(--accent); color: #fff; }
+.btn--ghost   { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn--ghost:hover { border-color: var(--accent); }
+
+
+/* ==========================================================================
+   8. SECTIONS & CARDS  (used on About + Work pages)
+   ========================================================================== */
+.grid { display: grid; gap: var(--space-3); }
+.grid--2 { grid-template-columns: repeat(2, 1fr); }
+.grid--auto { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  transition: transform 200ms var(--ease), border-color 200ms var(--ease);
+}
+.card:hover { transform: translateY(-4px); border-color: var(--accent); }
+.card__meta { font-size: 0.85rem; color: var(--ink-soft); margin-bottom: var(--space-1); }
+.card__title { margin-bottom: var(--space-1); }
+.card ul { margin: 0; padding-left: 1.1rem; }
+.card li { margin-bottom: 0.4rem; }
+
+/* A small pill for tags/skills */
+.tag {
+  display: inline-block;
+  font-size: 0.8rem; font-weight: 500;
+  padding: 0.25rem 0.7rem; margin: 0 0.3rem 0.4rem 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+
+.prose { max-width: 65ch; }
+.prose p { color: var(--ink-soft); }
+
+
+/* ==========================================================================
+   9. FOOTER
+   ========================================================================== */
+.footer {
+  border-top: 1px solid var(--line);
+  padding-block: var(--space-4);
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+.footer__inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
+.footer a { color: var(--ink-soft); }
+.footer a:hover { color: var(--ink); }
+
+
+/* ==========================================================================
+   10. MOTION — scroll reveal
+   Elements with .reveal start invisible+shifted; JS adds .is-visible when
+   they scroll into view, animating them in.
+   ========================================================================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 700ms var(--ease), transform 700ms var(--ease);
+}
+.reveal.is-visible { opacity: 1; transform: none; }
+
+/* ---- ACCESSIBILITY: respect people who ask for less motion ----
+   If the visitor's system says "reduce motion", we turn animations off. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
+
+
+/* ==========================================================================
+   RESPONSIVE — stack things on narrow screens (phones)
+   ========================================================================== */
+@media (max-width: 640px) {
+  .grid--2 { grid-template-columns: 1fr; }
+  .nav__links { gap: var(--space-2); }
+  .nav__links a { display: none; }        /* keep only brand + toggle on tiny screens */
+  .footer__inner { flex-direction: column; }
+}
