@@ -1,304 +1,280 @@
 /* ==========================================================================
-   Rahul Rajesh — portfolio styles
+   Rahul Rajesh — portfolio styles  (Layer 3: WebGL landing)
    --------------------------------------------------------------------------
-   HOW THIS FILE IS ORGANIZED (read top to bottom):
-     1. Design tokens      — every color, font, and size as a variable
-     2. Light / dark themes — we only swap the token VALUES, nothing else
-     3. Base / reset        — sensible defaults for the whole page
-     4. Layout helpers      — the centered container, section spacing
-     5. Navbar
-     6. Hero (the big name + the "lying on the letters" trick)
-     7. Buttons & links
-     8. Sections / cards (About + Work pages)
-     9. Footer
-    10. Motion (scroll-reveal + reduced-motion safety)
-
-   KEY IDEA: A "CSS custom property" (a variable) is written --name: value;
-   and used later as var(--name). Because our colors are variables, switching
-   to dark mode is just redefining those variables once — see section 2.
+   1. Tokens + dark theme      6. WebGL stage + reflection + View button
+   2. Base / reset             7. Dock + spin button
+   3. Layout helpers           8. Section pages (top bar + placeholder)
+   4. Preloader + loading ring 9. Footer
+   5. Giant backdrop word     10. Motion / responsive
    ========================================================================== */
 
-
-/* ==========================================================================
-   1. DESIGN TOKENS  (the light theme is the default set of values)
-   ========================================================================== */
+/* ============================ 1. TOKENS ============================ */
 :root {
-  /* ---- Colors: light / beige theme (the site's primary look) ---- */
-  --bg:            #f4efe6;  /* soft warm beige — the page background       */
-  --bg-elevated:   #fbf8f2;  /* slightly lighter — cards sit on top of bg   */
-  --ink:           #10233a;  /* deep navy — main text (softer than black)   */
-  --ink-soft:      #43566d;  /* muted navy-grey — secondary text            */
-  --accent:        #1f5fbf;  /* the blue — links, highlights                */
-  --accent-strong: #0d1b2a;  /* darkest navy — strong emphasis              */
-  --line:          #ddd3c2;  /* hairline borders on beige                   */
+  --bg:       #f0ebe1;
+  --bg-2:     #e7dfd0;
+  --ink:      #14243a;
+  --ink-soft: #5b6a7c;
+  --line:     #d5cab8;
+  --accent:   #2a4d7a;
 
-  /* ---- Typography ---- */
-  --font-display: "Space Grotesk", system-ui, sans-serif; /* big headings   */
-  --font-body:    "Inter", system-ui, sans-serif;         /* everything else*/
+  --serif:   "Instrument Serif", Georgia, "Times New Roman", serif;
+  --grotesk: "Schibsted Grotesk", system-ui, -apple-system, sans-serif;
 
-  /* ---- Spacing scale (keeps rhythm consistent across the site) ---- */
-  --space-1: 0.5rem;
-  --space-2: 1rem;
-  --space-3: 1.5rem;
-  --space-4: 2.5rem;
-  --space-5: 4rem;
-  --space-6: 6rem;
+  --space-1: 0.5rem; --space-2: 1rem;   --space-3: 1.5rem;
+  --space-4: 2.5rem; --space-5: 4rem;   --space-6: 6rem;
 
-  /* ---- Layout ---- */
-  --max-width: 1080px;      /* content never gets wider than this           */
-  --radius: 14px;           /* rounded corners on cards/buttons             */
+  /* Text that sits ON the navy band (band is theme-independent, so this is too) */
+  --panel-text: #f4efe6;
 
-  /* ---- Motion ---- */
-  --ease: cubic-bezier(0.22, 1, 0.36, 1);   /* a smooth, slightly springy ease */
-  --theme-fade: 480ms;       /* how long the light<->dark color fade takes   */
+  --radius: 3px;
+  --max-width: 1160px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --theme-fade: 480ms;
 }
-
-/* ==========================================================================
-   2. DARK THEME
-   We put data-theme="dark" on the <html> element from JavaScript. When it's
-   there, these values REPLACE the ones above. Nothing else in the file has
-   to change — every rule already reads from these variables.
-   ========================================================================== */
 :root[data-theme="dark"] {
-  --bg:            #0d1b2a;  /* deep navy background                        */
-  --bg-elevated:   #14273c;  /* raised navy for cards                       */
-  --ink:           #f1ece1;  /* soft beige-white text                       */
-  --ink-soft:      #a9b6c6;  /* muted light blue-grey                       */
-  --accent:        #6ea8ff;  /* brighter blue so it pops on dark            */
-  --accent-strong: #f1ece1;
-  --line:          #26384d;
+  --bg:       #0d1b2a;
+  --bg-2:     #16283b;
+  --ink:      #ede6d8;
+  --ink-soft: #9fb0c2;
+  --line:     #274056;
+  --accent:   #7aa7e0;
 }
 
-
-/* ==========================================================================
-   3. BASE / RESET
-   ========================================================================== */
-*, *::before, *::after { box-sizing: border-box; }  /* padding won't blow out widths */
-
-html { scroll-behavior: smooth; }                    /* nice anchor scrolling */
-
+/* ============================ 2. BASE ============================ */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
   margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
   background: var(--bg);
   color: var(--ink);
-  font-family: var(--font-body);
+  font-family: var(--grotesk);
   font-size: 1.05rem;
-  line-height: 1.65;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  /* When the theme swaps, fade the colors instead of snapping instantly. */
-  transition: background var(--theme-fade) var(--ease),
-              color      var(--theme-fade) var(--ease);
+  transition: background var(--theme-fade) var(--ease), color var(--theme-fade) var(--ease);
 }
-
-img, video { max-width: 100%; display: block; }
-
-h1, h2, h3 { font-family: var(--font-display); line-height: 1.05; margin: 0 0 var(--space-2); }
-h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.02em; }
-h3 { font-size: 1.25rem; }
-p  { margin: 0 0 var(--space-2); }
-
+img, video, canvas { max-width: 100%; display: block; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.0; margin: 0; }
 
-
-/* ==========================================================================
-   4. LAYOUT HELPERS
-   ========================================================================== */
+/* ============================ 3. LAYOUT ============================ */
 .container {
-  width: 100%;
-  max-width: var(--max-width);
-  margin-inline: auto;              /* center horizontally */
-  padding-inline: var(--space-3);   /* side gutters, never touches the edge */
+  width: 100%; max-width: var(--max-width);
+  margin-inline: auto; padding-inline: var(--space-4);
 }
 
-.section { padding-block: var(--space-6); }        /* generous vertical breathing room */
-.section__label {                                   /* small ALL-CAPS label above a heading */
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: var(--space-1);
+/* ==================== 4. PRELOADER + LOADING RING ==================== */
+/* The preloader is now just a full-screen veil; the ring sits a little below
+   the vertical center so the .wordmark (below) can occupy the center above it. */
+.preloader {
+  position: fixed; inset: 0; z-index: 100;
+  background: var(--bg);
 }
-.lead { font-size: 1.25rem; color: var(--ink-soft); max-width: 60ch; }
 
+.loader-ring {
+  position: fixed; left: 50%; top: 50%; z-index: 101;
+  width: 104px; height: 104px; transform: translate(-50%, 4.2rem);
+}
+.loader-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); } /* start the fill at 12 o'clock */
+.loader-ring__track { fill: none; stroke: var(--line); stroke-width: 2; }
+.loader-ring__bar {
+  fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round;
+  stroke-dasharray: 339.292;      /* 2 * PI * r(54) */
+  stroke-dashoffset: 339.292;     /* fully "empty"; JS reduces this as % rises */
+  transition: stroke-dashoffset 120ms linear;
+}
+.loader-ring__pct {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--grotesk); font-size: 0.95rem; letter-spacing: 0.06em; color: var(--ink-soft);
+}
 
-/* ==========================================================================
-   5. NAVBAR
-   ========================================================================== */
-.nav {
-  position: sticky; top: 0; z-index: 50;
-  background: color-mix(in srgb, var(--bg) 85%, transparent);
-  backdrop-filter: blur(8px);       /* frosted-glass effect over content */
-  border-bottom: 1px solid var(--line);
+/* ==================== 5. WORDMARK (loader name -> top masthead) ==================== */
+/* One element does double duty: big + centered while loading, then it STRETCHES
+   horizontally (letter-spacing widens) and RISES to the top as a masthead.
+   Both the size change (scale) and the move (translateY) are transforms, so the
+   morph stays on the GPU; the horizontal stretch rides on letter-spacing. */
+.wordmark {
+  position: fixed; left: 0; right: 0; top: 0; z-index: 102; margin: 0;
+  text-align: center; font-family: var(--serif); font-weight: 400; line-height: 1;
+  color: var(--ink); white-space: nowrap; pointer-events: none; user-select: none;
+  font-size: clamp(1.7rem, 4.6vw, 3rem);   /* resting masthead size */
+  letter-spacing: 0.3em;                    /* resting = stretched wide */
+  padding-top: var(--space-3);
+  transform: translateY(0) scale(1);        /* resting = at the top */
+  transform-origin: top center;
+  transition: transform 1100ms var(--ease), letter-spacing 1100ms var(--ease);
+  will-change: transform, letter-spacing;
 }
-.nav__inner {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: var(--space-2);
-  padding-block: var(--space-2);
+/* While loading: compact tracking, grown ~2x, and sitting in the UPPER third so
+   it clears the progress ring below it (no overlap with the % number). */
+body.is-loading .wordmark {
+  letter-spacing: 0.02em;
+  transform: translateY(30vh) scale(2);
 }
-.nav__brand {
-  font-family: var(--font-display);
-  font-weight: 700; font-size: 1.1rem;
-  color: var(--ink); letter-spacing: -0.02em;
-}
-.nav__brand:hover { text-decoration: none; }
-.nav__links { display: flex; gap: var(--space-3); align-items: center; }
-.nav__links a { color: var(--ink-soft); font-weight: 500; }
-.nav__links a:hover,
-.nav__links a[aria-current="page"] { color: var(--ink); text-decoration: none; }
 
-/* Theme toggle button */
-.theme-toggle {
-  border: 1px solid var(--line);
-  background: var(--bg-elevated);
-  color: var(--ink);
-  border-radius: 999px;
-  width: 42px; height: 42px;
+/* ==================== 6. WEBGL STAGE ==================== */
+/* Fixed + full-viewport: the drum stays put while the .scroll-track scrolls
+   underneath it and drives the rotation. */
+.stage { position: fixed; inset: 0; z-index: 2; width: 100%; height: 100vh; }
+.scene-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* A soft floor sheen under the band (replaces the old readable mirror) */
+.floor-sheen {
+  position: absolute; left: 50%; top: 60%; z-index: 3;
+  width: min(660px, 70vw); height: 130px; transform: translate(-50%, -50%);
+  pointer-events: none;
+  background: radial-gradient(ellipse at center,
+    color-mix(in srgb, var(--accent) 26%, transparent), transparent 68%);
+  filter: blur(20px); opacity: 0.55;
+}
+
+/* Active section name (crisp HTML, never warped by the curve) + View pill,
+   stacked and centered over the band. The name cross-fades on rotation. */
+.section-name {
+  position: fixed; left: 50%; top: 50%; z-index: 5;
+  transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-3);
+  text-align: center; pointer-events: none;
+}
+.section-name__label {
+  font-family: var(--serif); font-weight: 400; line-height: 1;
+  font-size: clamp(2.6rem, 8vw, 5.5rem); letter-spacing: -0.01em; color: var(--panel-text);
+  transition: opacity 260ms var(--ease), transform 260ms var(--ease);
+}
+.section-name__label.is-swapping { opacity: 0; transform: translateY(10px); }
+
+.view-btn {
+  pointer-events: auto;
+  background: var(--bg-2); border: 1px solid var(--line); color: var(--ink);
+  font-family: var(--grotesk); font-size: 0.9rem; letter-spacing: 0.08em; text-transform: uppercase;
+  border-radius: 999px; padding: 0.55rem 1.4rem; cursor: pointer;
+}
+.view-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* While loading, hide the stage + name + dock; JS reveals them after 100% */
+body.is-loading .stage,
+body.is-loading .section-name,
+body.is-loading .floor-sheen,
+body.is-loading .scroll-hint,
+body.is-loading .dock { opacity: 0; }
+.stage, .section-name, .floor-sheen, .scroll-hint, .dock { transition: opacity 800ms var(--ease); }
+
+/* ==================== 6c. SCROLL TRACK + HINT ==================== */
+/* The track only takes up scroll height when motion is enabled (JS adds
+   .motion-ok). Under reduced-motion the page doesn't scroll; the dock drives. */
+.scroll-track { width: 100%; height: 0; }
+body.motion-ok .scroll-track { height: 460vh; }
+
+.scroll-hint {
+  position: fixed; left: 50%; bottom: calc(var(--space-4) + 96px); z-index: 9;
+  transform: translateX(-50%);
+  font-family: var(--grotesk); font-size: 0.7rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--ink-soft); pointer-events: none;
+  transition: opacity 500ms var(--ease);
+}
+body:not(.motion-ok) .scroll-hint { display: none; }
+.scroll-hint.is-hidden { opacity: 0; }
+
+/* ==================== 7. DOCK ==================== */
+.dock {
+  position: fixed; left: 50%; bottom: var(--space-4); transform: translateX(-50%); z-index: 10;
+  display: flex; align-items: stretch; gap: var(--space-2);
+}
+.dock__main {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: 0.5rem 0.75rem 0.5rem 0.5rem;
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 999px;
+}
+.dock__thumb {
+  width: 52px; height: 52px; flex: none; border-radius: 50%;
+  background: var(--bg); border: 1px solid var(--line);
   display: grid; place-items: center;
-  cursor: pointer;
-  font-size: 1.1rem;
-  transition: transform 150ms var(--ease), border-color 150ms var(--ease);
+  font-family: var(--serif); font-size: 1.25rem; color: var(--ink); cursor: pointer;
 }
-.theme-toggle:hover { transform: rotate(-12deg) scale(1.05); border-color: var(--accent); }
-
-
-/* ==========================================================================
-   6. HERO  — the big stacked "Rahul / Rajesh" and the lying-on-letters trick
-   --------------------------------------------------------------------------
-   For now this shows the STATIC fallback (clean name with a normal dotted j).
-   Later we drop a background-removed video on top, positioned so Rahul lies
-   on "ajes" and the tossed ball becomes the dot on the j.
-   ========================================================================== */
-.hero {
-  min-height: calc(100vh - 74px);       /* fill the screen minus the navbar */
-  display: flex; flex-direction: column; justify-content: center;
-  padding-block: var(--space-5);
+.dock__meta { display: flex; flex-direction: column; line-height: 1.15; padding-right: var(--space-2); cursor: pointer; }
+.dock__hint { font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft); }
+.dock__label { font-family: var(--serif); font-size: 1.5rem; color: var(--ink); transition: opacity 220ms var(--ease); }
+.dock__label.is-swapping { opacity: 0; }
+.dock__arrow {
+  width: 34px; height: 34px; flex: none; display: grid; place-items: center;
+  background: transparent; border: 1px solid var(--line); border-radius: 50%;
+  color: var(--ink); font-size: 1.1rem; line-height: 1; cursor: pointer; font-family: var(--grotesk);
 }
-.hero__name {
-  font-family: var(--font-display);
-  font-weight: 700;
-  /* clamp() = responsive size: min, preferred (scales with viewport), max */
-  font-size: clamp(3.5rem, 15vw, 11rem);
-  line-height: 0.92;
-  letter-spacing: -0.03em;
-  margin: 0;
+.dock__arrow:hover { border-color: var(--accent); color: var(--accent); }
+
+.dock__enter {
+  position: relative; flex: none; width: 64px; height: 64px;
+  display: grid; place-items: center;
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 50%;
+  color: var(--ink); cursor: pointer;
 }
-.hero__name .line { display: block; }
-.hero__name .first { color: var(--ink-soft); }   /* "Rahul" a touch quieter */
-.hero__name .last  {
-  color: var(--ink);
-  position: relative;   /* anchor point for the video/ball layer later */
+.dock__enter:hover { border-color: var(--accent); color: var(--accent); }
+.dock__ring { position: absolute; inset: 6px; width: calc(100% - 12px); height: calc(100% - 12px); animation: spin 9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.dock__enter-mark { font-size: 1.2rem; line-height: 1; }
+
+/* ==================== 8. SECTION PAGES ==================== */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--line);
 }
+.topbar__brand { font-family: var(--serif); font-size: 1.4rem; color: var(--ink); }
+.topbar__brand:hover { text-decoration: none; }
+.topbar__right { display: flex; align-items: center; gap: var(--space-3); }
+.topbar__right a { color: var(--ink-soft); font-size: 0.95rem; }
+.topbar__right a:hover { color: var(--ink); text-decoration: none; }
+.topbar .mode-toggle { position: static; }
 
-/* The rotating subtitle (student · researcher · photographer ...) */
-.hero__subtitle {
-  margin-top: var(--space-3);
-  font-family: var(--font-display);
-  font-size: clamp(1.1rem, 3vw, 1.6rem);
-  color: var(--ink-soft);
+.section-page {
+  min-height: 70vh; display: flex; flex-direction: column; justify-content: center;
+  align-items: flex-start; padding-block: var(--space-6);
 }
-.hero__subtitle .rotator { color: var(--accent); font-weight: 600; }
+.eyebrow { font-family: var(--grotesk); font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin: 0 0 var(--space-2); }
+.section-title { font-size: clamp(3rem, 10vw, 7rem); letter-spacing: -0.02em; color: var(--ink); margin-bottom: var(--space-3); }
+.section-desc { max-width: 48ch; color: var(--ink-soft); font-size: 1.15rem; margin-bottom: var(--space-3); }
+.section-status { display: inline-block; font-size: 0.85rem; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 999px; padding: 0.35rem 0.9rem; margin-bottom: var(--space-4); }
+.back-link { font-family: var(--grotesk); color: var(--ink); }
 
-.hero__intro { margin-top: var(--space-3); max-width: 52ch; font-size: 1.15rem; }
-.hero__cta { margin-top: var(--space-4); display: flex; gap: var(--space-2); flex-wrap: wrap; }
-
-
-/* ==========================================================================
-   7. BUTTONS
-   ========================================================================== */
-.btn {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  padding: 0.7rem 1.3rem;
-  border-radius: 999px;
-  font-weight: 600; font-family: var(--font-body);
-  cursor: pointer; border: 1px solid transparent;
-  transition: transform 150ms var(--ease), background 150ms var(--ease);
+/* ==================== 6b. DARK-MODE TOGGLE ==================== */
+.mode-toggle {
+  position: fixed; top: var(--space-3); right: var(--space-4); z-index: 60;
+  width: 40px; height: 40px; display: grid; place-items: center;
+  background: transparent; border: 1px solid var(--line); border-radius: 50%;
+  color: var(--ink); cursor: pointer;
 }
-.btn:hover { text-decoration: none; transform: translateY(-2px); }
-.btn--primary { background: var(--accent); color: #fff; }
-.btn--ghost   { background: transparent; color: var(--ink); border-color: var(--line); }
-.btn--ghost:hover { border-color: var(--accent); }
+.mode-toggle:hover { border-color: var(--accent); }
+.mode-toggle svg { width: 18px; height: 18px; display: block; }
 
-
-/* ==========================================================================
-   8. SECTIONS & CARDS  (used on About + Work pages)
-   ========================================================================== */
-.grid { display: grid; gap: var(--space-3); }
-.grid--2 { grid-template-columns: repeat(2, 1fr); }
-.grid--auto { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-
-.card {
-  background: var(--bg-elevated);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: var(--space-3);
-  transition: transform 200ms var(--ease), border-color 200ms var(--ease);
-}
-.card:hover { transform: translateY(-4px); border-color: var(--accent); }
-.card__meta { font-size: 0.85rem; color: var(--ink-soft); margin-bottom: var(--space-1); }
-.card__title { margin-bottom: var(--space-1); }
-.card ul { margin: 0; padding-left: 1.1rem; }
-.card li { margin-bottom: 0.4rem; }
-
-/* A small pill for tags/skills */
-.tag {
-  display: inline-block;
-  font-size: 0.8rem; font-weight: 500;
-  padding: 0.25rem 0.7rem; margin: 0 0.3rem 0.4rem 0;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--accent);
-}
-
-.prose { max-width: 65ch; }
-.prose p { color: var(--ink-soft); }
-
-
-/* ==========================================================================
-   9. FOOTER
-   ========================================================================== */
+/* ==================== 9. FOOTER ==================== */
 .footer {
-  border-top: 1px solid var(--line);
-  padding-block: var(--space-4);
-  color: var(--ink-soft);
-  font-size: 0.95rem;
+  border-top: 1px solid var(--line); padding: var(--space-4);
+  color: var(--ink-soft); font-size: 0.9rem;
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2);
 }
-.footer__inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
 .footer a { color: var(--ink-soft); }
 .footer a:hover { color: var(--ink); }
 
-
-/* ==========================================================================
-   10. MOTION — scroll reveal
-   Elements with .reveal start invisible+shifted; JS adds .is-visible when
-   they scroll into view, animating them in.
-   ========================================================================== */
-.reveal {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 700ms var(--ease), transform 700ms var(--ease);
-}
-.reveal.is-visible { opacity: 1; transform: none; }
-
-/* ---- ACCESSIBILITY: respect people who ask for less motion ----
-   If the visitor's system says "reduce motion", we turn animations off. */
+/* ==================== 10. MOTION / RESPONSIVE ==================== */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
-    animation-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-  .reveal { opacity: 1; transform: none; }
 }
-
-
-/* ==========================================================================
-   RESPONSIVE — stack things on narrow screens (phones)
-   ========================================================================== */
 @media (max-width: 640px) {
-  .grid--2 { grid-template-columns: 1fr; }
-  .nav__links { gap: var(--space-2); }
-  .nav__links a { display: none; }        /* keep only brand + toggle on tiny screens */
-  .footer__inner { flex-direction: column; }
+  .container { padding-inline: var(--space-3); }
+  .wordmark { letter-spacing: 0.2em; }
+  body.is-loading .wordmark { transform: translateY(28vh) scale(1.8); }
+  body.motion-ok .scroll-track { height: 420vh; }
+  .dock { width: calc(100% - var(--space-4)); }
+  .dock__main { flex: 1; }
+  .dock__label { font-size: 1.2rem; }
+  .dock__thumb { width: 44px; height: 44px; }
+  .dock__enter { width: 56px; height: 56px; }
+  .footer { flex-direction: column; }
 }

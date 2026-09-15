@@ -3,109 +3,112 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rahul Rajesh</title>
-  <meta name="description" content="Rahul Rajesh — student, researcher, photographer. Math & CS/AI at ASU Barrett Honors." />
+  <title>R. Rajesh</title>
+  <meta name="description" content="Rahul Rajesh — student, researcher, and photographer at ASU." />
 
-  <!-- Prevent a flash of the wrong theme: set the saved theme BEFORE the page
-       paints. This tiny script runs immediately (it's in the <head>). -->
   <script>
-    if (localStorage.getItem("theme") === "dark") {
-      document.documentElement.setAttribute("data-theme", "dark");
-    }
+    if (localStorage.getItem("theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");
   </script>
 
-  <!-- Fonts (loaded from Google Fonts) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="css/styles.css" />
+
+  <!-- The five sections: single source of truth, read by both scripts below -->
+  <script>
+    window.RR_SECTIONS = [
+      { label: "Academic",    href: "academic.html" },
+      { label: "Journey",     href: "journey.html" },
+      { label: "Blogs",       href: "blogs.html" },
+      { label: "Photography", href: "photography.html" },
+      { label: "About",       href: "about.html" }
+    ];
+  </script>
+
+  <!-- Three.js via a native ES-module import map (no build tools) -->
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+  </script>
+  <!-- GSAP as a global (used by both scripts) + ScrollTrigger for scroll-driven rotation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 </head>
-<body>
 
-  <!-- ======================= NAVBAR =======================
-       This same nav appears on all three pages. For now we copy it into each
-       file (simplest approach while learning). aria-current="page" marks the
-       page we're currently on. -->
-  <header class="nav">
-    <nav class="nav__inner container">
-      <a href="index.html" class="nav__brand">RR</a>
-      <div class="nav__links">
-        <a href="index.html" aria-current="page">Home</a>
-        <a href="about.html">About</a>
-        <a href="work.html">Work</a>
-        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme">☾</button>
-      </div>
-    </nav>
-  </header>
+<body class="is-loading">
 
-  <main>
-    <!-- ======================= HERO =======================
-         The big stacked name. Right now this is the STATIC fallback: a clean
-         "Rahul / Rajesh" with the normal dotted "j". Later, a background-removed
-         video layers on top of .last so Rahul appears to lie on "ajes" and the
-         tossed ball becomes the dot on the j. -->
-    <section class="hero container">
-      <h1 class="hero__name">
-        <span class="line first">Rahul</span>
-        <span class="line last">Rajesh</span>
-      </h1>
-
-      <p class="hero__subtitle">
-        I'm a <span class="rotator">student</span>.
-      </p>
-
-      <p class="hero__intro">
-        Math &amp; Statistics + Computer Science (AI) at Barrett, The Honors College
-        at Arizona State. I build things with data and machine learning — and away
-        from the screen, I'm usually behind a camera.
-      </p>
-
-      <div class="hero__cta">
-        <a href="work.html" class="btn btn--primary">See my work →</a>
-        <a href="about.html" class="btn btn--ghost">About me</a>
-      </div>
-    </section>
-
-    <!-- ======================= "CURRENTLY" =======================
-         A short, personal snapshot. .reveal makes it fade in on scroll. -->
-    <section class="section container">
-      <div class="reveal">
-        <p class="section__label">Currently</p>
-        <h2>A few things I'm up to</h2>
-        <div class="grid grid--auto" style="margin-top: var(--space-3);">
-          <div class="card">
-            <p class="card__meta">Research</p>
-            <h3 class="card__title">Robotics &amp; RL Lab</h3>
-            <p>Building a ROS2 velocity-estimation pipeline for a biomimetic quadruped, and training computer-vision models for biosecurity screening.</p>
-          </div>
-          <div class="card">
-            <p class="card__meta">Incoming</p>
-            <h3 class="card__title">EssilorLuxottica</h3>
-            <p>Data Analytics + AI intern in NYC — ETL pipelines in R and a RAG-based analytics assistant.</p>
-          </div>
-          <div class="card">
-            <p class="card__meta">Off the clock</p>
-            <h3 class="card__title">Wildlife &amp; portraits</h3>
-            <p>Chasing light with a camera — animals in the wild, and lately, people.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- ======================= FOOTER ======================= -->
-  <footer class="footer">
-    <div class="footer__inner container">
-      <span>© 2026 Rahul Rajesh</span>
-      <span>
-        <a href="https://www.linkedin.com/in/rahulrajesh123" target="_blank" rel="noopener">LinkedIn</a>
-        &nbsp;·&nbsp;
-        <a href="https://github.com/rahulrajes" target="_blank" rel="noopener">GitHub</a>
-      </span>
+  <!-- ===================== PRELOADER =====================
+       A full-screen veil holding the circular progress ring that fills as the
+       % counts up. The name is a SEPARATE .wordmark element (below) so it can
+       morph into the top masthead on reveal instead of being trapped here. -->
+  <div class="preloader" id="preloader">
+    <div class="loader-ring">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <circle class="loader-ring__track" cx="60" cy="60" r="54" />
+        <circle class="loader-ring__bar"   id="loaderBar" cx="60" cy="60" r="54" />
+      </svg>
+      <div class="loader-ring__pct"><span id="pct">0</span></div>
     </div>
-  </footer>
+  </div>
 
+  <!-- ===================== WORDMARK =====================
+       Centered + large during load; on reveal it stretches wide and rises to
+       the top of the screen to become a persistent masthead. -->
+  <div class="wordmark" id="wordmark">R. Rajesh</div>
+
+  <!-- ===================== DARK-MODE TOGGLE (corner) ===================== -->
+  <button class="mode-toggle" id="theme-toggle" type="button" aria-label="Switch theme">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M12 3 a9 9 0 0 1 0 18 z" fill="currentColor"/>
+    </svg>
+  </button>
+
+  <!-- ===================== WEBGL STAGE =====================
+       Fixed, full-viewport. The thin drum rotates as you scroll; the active
+       section's name is crisp HTML (not painted on the curved panel, so it
+       never warps) and cross-fades as the drum turns. -->
+  <div class="stage">
+    <canvas id="scene" class="scene-canvas"></canvas>
+    <div class="floor-sheen" aria-hidden="true"></div>
+    <div class="section-name">
+      <div class="section-name__label" id="sectionTitle">Academic</div>
+      <button class="view-btn" id="viewBtn" type="button">View</button>
+    </div>
+  </div>
+
+  <!-- ===================== SCROLL TRACK =====================
+       Empty spacer that gives the page its scroll height so scrolling can
+       drive the drum's rotation. Height is applied only when motion is on. -->
+  <div class="scroll-track" id="scrollTrack" aria-hidden="true"></div>
+
+  <!-- A quiet, self-dismissing hint that the page responds to scroll -->
+  <div class="scroll-hint" id="scrollHint" aria-hidden="true">Scroll to explore</div>
+
+  <!-- ===================== DOCK ===================== -->
+  <div class="dock" aria-label="Section navigator">
+    <div class="dock__main">
+      <div class="dock__thumb" id="dockThumb" aria-hidden="true">01</div>
+      <div class="dock__meta">
+        <span class="dock__hint">Category</span>
+        <span class="dock__label" id="dockLabel">Academic</span>
+      </div>
+      <button class="dock__arrow" id="prevBtn" type="button" aria-label="Previous section">&lsaquo;</button>
+      <button class="dock__arrow" id="nextBtn" type="button" aria-label="Next section">&rsaquo;</button>
+    </div>
+
+    <button class="dock__enter" id="enterBtn" type="button" aria-label="Open this section">
+      <svg class="dock__ring" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 7" />
+      </svg>
+      <span class="dock__enter-mark" aria-hidden="true">&nearr;</span>
+    </button>
+  </div>
+
+  <!-- Theme + preloader + dock (plain script, also used on section pages) -->
   <script src="js/main.js"></script>
+  <!-- The Three.js scene (module; only runs on this page) -->
+  <script type="module" src="js/scene.js"></script>
 </body>
 </html>

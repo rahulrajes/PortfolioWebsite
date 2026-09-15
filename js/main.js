@@ -1,115 +1,163 @@
 /* ==========================================================================
-   Rahul Rajesh — site behavior
-   --------------------------------------------------------------------------
-   Three small features, each in its own clearly-labeled block:
-     A. Light / dark theme toggle  (remembers your choice)
-     B. Rotating subtitle          (student -> researcher -> photographer ...)
-     C. Scroll-reveal              (sections fade in as you scroll)
+   Rahul Rajesh — site behavior (Layer 4)
+     A. Theme toggle       (every page)
+     B. Preloader          (ring + count, then reveal)        — landing only
+     C. Scroll rotation    (scroll drives the drum, w/ snap)  — landing only
+     D. Nav / dock         (label + title + arrows + open)    — landing only
 
-   Everything runs after the page's HTML is ready (see the DOMContentLoaded
-   listener at the very bottom).
+   The WebGL drum lives in js/scene.js and exposes window.RRScene. This file
+   degrades gracefully: if the scene never loads (or motion is reduced), the
+   loader, reveal, dock, and keyboard nav still work.
    ========================================================================== */
 
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const S = window.RR_SECTIONS || [];
+const N = S.length;
+let current = 0;                       // active section index, shared across B–D
 
-/* --------------------------------------------------------------------------
-   A. THEME TOGGLE
-   The theme is controlled by a data-theme="dark" attribute on <html>.
-   CSS reacts to that attribute (see styles.css section 2). Here we just
-   flip it, and remember the choice in localStorage so it sticks next visit.
-
-   NOTE: the light/dark "reading light" video transition (Rahul's clip) will
-   hook in here later — right where the comment marks it.
-   -------------------------------------------------------------------------- */
+/* ---- A. THEME TOGGLE ---- */
 function initThemeToggle() {
-  const root = document.documentElement;            // the <html> element
+  const root = document.documentElement;
   const toggle = document.querySelector("#theme-toggle");
   if (!toggle) return;
-
-  // Decide the starting theme: saved choice wins; otherwise default = light.
-  const saved = localStorage.getItem("theme");
-  if (saved === "dark") root.setAttribute("data-theme", "dark");
-
-  // Keep the button's icon + label in sync with the current theme.
-  function syncButton() {
-    const isDark = root.getAttribute("data-theme") === "dark";
-    toggle.textContent = isDark ? "☀" : "☾";        // sun in dark mode, moon in light
-    toggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
-  }
-  syncButton();
-
+  if (localStorage.getItem("theme") === "dark") root.setAttribute("data-theme", "dark");
   toggle.addEventListener("click", () => {
     const isDark = root.getAttribute("data-theme") === "dark";
-
-    // >>> FUTURE: play Rahul's "reading light" clip here as the transition <<<
-
-    if (isDark) {
-      root.removeAttribute("data-theme");
-      localStorage.setItem("theme", "light");
-    } else {
-      root.setAttribute("data-theme", "dark");
-      localStorage.setItem("theme", "dark");
-    }
-    syncButton();
+    if (isDark) { root.removeAttribute("data-theme"); localStorage.setItem("theme", "light"); }
+    else        { root.setAttribute("data-theme", "dark"); localStorage.setItem("theme", "dark"); }
+    if (window.RRScene && window.RRScene.refreshTheme) window.RRScene.refreshTheme();
   });
 }
 
-
-/* --------------------------------------------------------------------------
-   B. ROTATING SUBTITLE
-   Cycles the word inside <span class="rotator"> through a list, fading each
-   in and out. Purely decorative, so if the element isn't on the page we skip.
-   -------------------------------------------------------------------------- */
-function initRotator() {
-  const el = document.querySelector(".rotator");
-  if (!el) return;
-
-  const words = ["student", "researcher", "photographer", "artist", "analyst"];
-  let i = 0;
-
-  // If the visitor prefers reduced motion, just show the first word, no cycling.
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (reduceMotion) { el.textContent = words[0]; return; }
-
-  setInterval(() => {
-    el.style.opacity = "0";                 // fade out
-    setTimeout(() => {
-      i = (i + 1) % words.length;           // next word (loops back to start)
-      el.textContent = words[i];
-      el.style.opacity = "1";               // fade in
-    }, 250);
-  }, 2200);
-
-  el.style.transition = "opacity 250ms ease";
+/* ---- Shared: reflect the active section in the dock + centered title ---- */
+function setActive(i) {
+  i = ((i % N) + N) % N;
+  if (i === current) return;
+  current = i;
+  const label = document.querySelector("#dockLabel");
+  const thumb = document.querySelector("#dockThumb");
+  const title = document.querySelector("#sectionTitle");
+  const swap = [label, title].filter(Boolean);
+  swap.forEach((el) => el.classList.add("is-swapping"));
+  window.setTimeout(() => {
+    if (label) label.textContent = S[i].label;
+    if (title) title.textContent = S[i].label;
+    if (thumb) thumb.textContent = String(i + 1).padStart(2, "0");
+    swap.forEach((el) => el.classList.remove("is-swapping"));
+  }, reduceMotion ? 0 : 180);
 }
 
+/* ---- B. PRELOADER (ring + count) ---- */
+function initPreloader() {
+  const preloader = document.querySelector("#preloader");
+  const bar = document.querySelector("#loaderBar");
+  const pctEl = document.querySelector("#pct");
+  if (!preloader || !pctEl) return;
 
-/* --------------------------------------------------------------------------
-   C. SCROLL REVEAL
-   IntersectionObserver tells us when an element enters the screen. When a
-   .reveal element does, we add .is-visible and CSS animates it in (once).
-   -------------------------------------------------------------------------- */
-function initScrollReveal() {
-  const items = document.querySelectorAll(".reveal");
-  if (!items.length) return;
+  const CIRC = 2 * Math.PI * 54;           // circumference of the ring (r = 54)
+  function setPct(p) {
+    pctEl.textContent = p;
+    if (bar) bar.style.strokeDashoffset = CIRC * (1 - p / 100);   // fill the ring
+  }
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("is-visible");
-        observer.unobserve(entry.target);   // reveal each element only once
-      }
-    });
-  }, { threshold: 0.15 });                   // fire when ~15% is on screen
+  function reveal() {
+    // Removing is-loading fades the stage/dock in AND triggers the CSS wordmark
+    // morph (stretch wide + rise to the top).
+    document.body.classList.remove("is-loading");
+    if (window.RRScene && window.RRScene.reveal) window.RRScene.reveal();
+    if (window.gsap) {
+      window.gsap.to(preloader, { opacity: 0, duration: 0.7, ease: "power2.out",
+        onComplete: () => { preloader.hidden = true; } });
+    } else {
+      preloader.style.transition = "opacity 700ms ease";
+      preloader.style.opacity = "0";
+      window.setTimeout(() => { preloader.hidden = true; }, 720);
+    }
+  }
 
-  items.forEach((item) => observer.observe(item));
+  if (reduceMotion) { setPct(100); reveal(); return; }
+
+  let pct = 0, loaded = false;
+  window.addEventListener("load", () => { loaded = true; });
+  const timer = window.setInterval(() => {
+    const target = loaded ? 100 : 90;      // hold at 90 until the page truly loads
+    pct += Math.max(1, Math.round((target - pct) * 0.08));
+    if (pct >= target) pct = target;
+    setPct(pct);
+    if (pct >= 100) { window.clearInterval(timer); window.setTimeout(reveal, 350); }
+  }, 55);
 }
 
+/* ---- C. SCROLL ROTATION (ScrollTrigger scrub + snap) ----
+   Maps page-scroll progress to the drum's rotation and snaps so a section
+   always lands centered. Returns true when active (motion enabled). -------- */
+function initScrollRotation() {
+  if (reduceMotion || !window.gsap || !window.ScrollTrigger || N < 2) return false;
+  document.body.classList.add("motion-ok");
+  window.gsap.registerPlugin(window.ScrollTrigger);
 
-/* --------------------------------------------------------------------------
-   Run everything once the page's HTML has loaded.
-   -------------------------------------------------------------------------- */
+  window.ScrollTrigger.create({
+    trigger: "#scrollTrack", start: "top top", end: "bottom bottom", scrub: 1,
+    snap: { snapTo: 1 / (N - 1), duration: { min: 0.15, max: 0.45 }, ease: "power2.inOut" },
+    onUpdate: (self) => {
+      if (window.RRScene && window.RRScene.setProgress) window.RRScene.setProgress(self.progress);
+      setActive(Math.round(self.progress * (N - 1)));
+    },
+  });
+
+  // Layout depends on font metrics + the fixed stage; recalc once both settle.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => window.ScrollTrigger.refresh());
+  window.addEventListener("load", () => window.ScrollTrigger.refresh());
+
+  // Retire the "scroll to explore" hint after the first real scroll.
+  const hint = document.querySelector("#scrollHint");
+  if (hint) window.addEventListener("scroll", () => hint.classList.add("is-hidden"), { once: true, passive: true });
+  return true;
+}
+
+/* ---- D. NAV / DOCK ---- */
+function initDock() {
+  if (!S.length) return;
+  const prev = document.querySelector("#prevBtn");
+  const next = document.querySelector("#nextBtn");
+  const enter = document.querySelector("#enterBtn");
+  const view = document.querySelector("#viewBtn");
+  const label = document.querySelector("#dockLabel");
+  const thumb = document.querySelector("#dockThumb");
+  const motionOn = document.body.classList.contains("motion-ok");
+
+  function open() { window.location.href = S[current].href; }
+
+  // When scroll drives the scene, move the scrollbar to the target section and
+  // let onUpdate rotate + relabel. Otherwise rotate the drum directly.
+  function scrollToIndex(i) {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    window.scrollTo({ top: (i / (N - 1)) * max, behavior: reduceMotion ? "auto" : "smooth" });
+  }
+  function navigate(dir) {
+    const target = Math.max(0, Math.min(N - 1, current + dir));
+    if (target === current) return;
+    if (motionOn) { scrollToIndex(target); }
+    else { setActive(target); if (window.RRScene && window.RRScene.rotateTo) window.RRScene.rotateTo(target); }
+  }
+
+  if (prev) prev.addEventListener("click", () => navigate(-1));
+  if (next) next.addEventListener("click", () => navigate(1));
+  if (enter) enter.addEventListener("click", open);
+  if (view) view.addEventListener("click", open);
+  if (label) label.addEventListener("click", open);
+  if (thumb) thumb.addEventListener("click", open);
+
+  // Keyboard: Left/Right step sections (vertical keys stay native scroll).
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight") navigate(1);
+    else if (e.key === "ArrowLeft") navigate(-1);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle();
-  initRotator();
-  initScrollReveal();
+  initPreloader();
+  initScrollRotation();   // sets body.motion-ok when active
+  initDock();             // reads body.motion-ok
 });
