@@ -101,19 +101,26 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.0; marg
   position: fixed; left: 0; right: 0; top: 0; z-index: 102; margin: 0;
   text-align: center; font-family: var(--serif); font-weight: 400; line-height: 1;
   color: var(--ink); white-space: nowrap; pointer-events: none; user-select: none;
-  font-size: clamp(1.7rem, 4.6vw, 3rem);   /* resting masthead size */
-  letter-spacing: 0.3em;                    /* resting = stretched wide */
+  font-size: clamp(3rem, 9vw, 6.5rem);      /* big, hero-scale masthead */
+  letter-spacing: 0.04em;                   /* full + solid, not airy */
+  -webkit-text-stroke: 0.6px currentColor;  /* fatten Instrument Serif (it ships no bold weight) */
   padding-top: var(--space-3);
   transform: translateY(0) scale(1);        /* resting = at the top */
   transform-origin: top center;
   transition: transform 1100ms var(--ease), letter-spacing 1100ms var(--ease);
   will-change: transform, letter-spacing;
 }
-/* While loading: compact tracking, grown ~2x, and sitting in the UPPER third so
-   it clears the progress ring below it (no overlap with the % number). */
+/* A slim line resting over the "ajes" (same ink, so it stays part of the mark) */
+.wordmark__over { position: relative; }
+.wordmark__over::before {
+  content: ""; position: absolute; left: -0.02em; right: -0.02em; top: 0.24em;
+  height: 0.07em; background: currentColor; border-radius: 999px;
+}
+/* While loading: compact tracking, a touch larger, and sitting in the UPPER
+   third so it clears the progress ring below it (no overlap with the number). */
 body.is-loading .wordmark {
   letter-spacing: 0.02em;
-  transform: translateY(30vh) scale(2);
+  transform: translateY(28vh) scale(1.35);
 }
 
 /* ==================== 6. WEBGL STAGE ==================== */
@@ -122,14 +129,14 @@ body.is-loading .wordmark {
 .stage { position: fixed; inset: 0; z-index: 2; width: 100%; height: 100vh; }
 .scene-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 
-/* A soft floor sheen under the band (replaces the old readable mirror) */
+/* A soft contact shadow just under the band, to ground the drum in space
+   (replaces the old readable mirror) */
 .floor-sheen {
-  position: absolute; left: 50%; top: 60%; z-index: 3;
-  width: min(660px, 70vw); height: 130px; transform: translate(-50%, -50%);
+  position: absolute; left: 50%; top: 66%; z-index: 3;
+  width: min(680px, 72vw); height: 96px; transform: translate(-50%, -50%);
   pointer-events: none;
-  background: radial-gradient(ellipse at center,
-    color-mix(in srgb, var(--accent) 26%, transparent), transparent 68%);
-  filter: blur(20px); opacity: 0.55;
+  background: radial-gradient(ellipse at center, rgba(8, 15, 26, 0.30), transparent 72%);
+  filter: blur(18px);
 }
 
 /* Active section name (crisp HTML, never warped by the curve) + View pill,
@@ -167,7 +174,7 @@ body.is-loading .dock { opacity: 0; }
 /* The track only takes up scroll height when motion is enabled (JS adds
    .motion-ok). Under reduced-motion the page doesn't scroll; the dock drives. */
 .scroll-track { width: 100%; height: 0; }
-body.motion-ok .scroll-track { height: 460vh; }
+body.motion-ok .scroll-track { height: 520vh; }
 
 .scroll-hint {
   position: fixed; left: 50%; bottom: calc(var(--space-4) + 96px); z-index: 9;
@@ -268,9 +275,9 @@ body:not(.motion-ok) .scroll-hint { display: none; }
 }
 @media (max-width: 640px) {
   .container { padding-inline: var(--space-3); }
-  .wordmark { letter-spacing: 0.2em; }
-  body.is-loading .wordmark { transform: translateY(28vh) scale(1.8); }
-  body.motion-ok .scroll-track { height: 420vh; }
+  .wordmark { letter-spacing: 0.03em; font-size: clamp(2.2rem, 11vw, 3.4rem); }
+  body.is-loading .wordmark { transform: translateY(26vh) scale(1.4); }
+  body.motion-ok .scroll-track { height: 460vh; }
   .dock { width: calc(100% - var(--space-4)); }
   .dock__main { flex: 1; }
   .dock__label { font-size: 1.2rem; }
