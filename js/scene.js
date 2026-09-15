@@ -28,6 +28,8 @@ const N = SECTIONS.length;
 const R = 3.15;                     // drum radius
 const H = 1.05;                     // panel height — a thin band, not a tall drum
 const SEG = (Math.PI * 2) / N;      // arc per panel
+const GAP_ANGLE = SEG * 0.08;       // gap between panels so it reads as a segmented drum
+const CORE_R = R * 0.9;             // dark inner core, seen through the gaps as a recessed shadow
 
 let renderer, scene, camera, drum;
 let ready = false;
@@ -57,20 +59,39 @@ function makeTexture(index) {
   ctx.textBaseline = "middle"; ctx.textAlign = "center";
   ctx.fillText(String(index + 1).padStart(2, "0"), c.width / 2, c.height / 2 + 6);
 
+  // darken the left/right edges so each panel reads as a curved facet (fake shading)
+  const hg = ctx.createLinearGradient(0, 0, c.width, 0);
+  hg.addColorStop(0, "rgba(0,0,0,0.55)");
+  hg.addColorStop(0.14, "rgba(0,0,0,0)");
+  hg.addColorStop(0.86, "rgba(0,0,0,0)");
+  hg.addColorStop(1, "rgba(0,0,0,0.55)");
+  ctx.fillStyle = hg; ctx.fillRect(0, 0, c.width, c.height);
+
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
   return tex;
 }
 
-/* -------- build one curved panel (a cylinder segment) -------- */
+/* -------- build one curved panel (a cylinder segment) --------
+   The arc is trimmed by GAP_ANGLE and centered in its slot, leaving a gap on
+   each side so the panels read as separate tiles on a drum. -------- */
 function makePanel(i) {
-  const geo = new THREE.CylinderGeometry(R, R, H, 48, 1, true, i * SEG, SEG);
+  const geo = new THREE.CylinderGeometry(
+    R, R, H, 48, 1, true, i * SEG + GAP_ANGLE / 2, SEG - GAP_ANGLE
+  );
   const mat = new THREE.MeshBasicMaterial({
     map: makeTexture(i),
     side: THREE.DoubleSide,
-    transparent: true,
   });
+  return new THREE.Mesh(geo, mat);
+}
+
+/* -------- dark inner core: a full cylinder just inside the tiles, so the gaps
+   between tiles reveal a recessed dark surface (reads as shadow / depth) -------- */
+function makeCore() {
+  const geo = new THREE.CylinderGeometry(CORE_R, CORE_R, H, 64, 1, true);
+  const mat = new THREE.MeshBasicMaterial({ color: 0x070e18, side: THREE.DoubleSide });
   return new THREE.Mesh(geo, mat);
 }
 
@@ -85,6 +106,7 @@ function init() {
   // Build the drum once fonts are ready (so the index digits use the real font)
   const build = () => {
     drum = new THREE.Group();
+    drum.add(makeCore());
     for (let i = 0; i < N; i++) drum.add(makePanel(i));
     scene.add(drum);
     ready = true;
@@ -133,14 +155,15 @@ function rotateTo(i, immediate) {
 }
 
 /* -------- scroll-driven rotation --------
-   progress 0..1 maps linearly across the N panels: p=0 -> panel 0 at front,
-   p=1 -> the last panel at front. ScrollTrigger's scrub already smooths this,
-   so we set the rotation directly (no tween). -------- */
+   progress 0..1 maps to ONE FULL 360° turn: p=0 -> panel 0 at front, and by
+   p=1 the drum has come all the way back around to panel 0 (so scrolling past
+   the last section loops to the first instead of reversing). ScrollTrigger's
+   scrub already smooths this, so we set the rotation directly (no tween). -------- */
 function setProgress(p) {
   const clamped = Math.max(0, Math.min(1, p));
-  pendingIndex = Math.round(clamped * (N - 1));
+  pendingIndex = Math.round(clamped * N) % N;
   if (!ready) return;
-  const target = -(SEG / 2) - clamped * (N - 1) * SEG;
+  const target = -(SEG / 2) - clamped * Math.PI * 2;
   currentY = target;
   drum.rotation.y = target;
 }

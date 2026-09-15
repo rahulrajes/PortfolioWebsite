@@ -98,10 +98,10 @@ function initScrollRotation() {
 
   window.ScrollTrigger.create({
     trigger: "#scrollTrack", start: "top top", end: "bottom bottom", scrub: 1,
-    snap: { snapTo: 1 / (N - 1), duration: { min: 0.15, max: 0.45 }, ease: "power2.inOut" },
+    snap: { snapTo: 1 / N, duration: { min: 0.15, max: 0.45 }, ease: "power2.inOut" },
     onUpdate: (self) => {
       if (window.RRScene && window.RRScene.setProgress) window.RRScene.setProgress(self.progress);
-      setActive(Math.round(self.progress * (N - 1)));
+      setActive(Math.round(self.progress * N) % N);
     },
   });
 
@@ -130,15 +130,20 @@ function initDock() {
 
   // When scroll drives the scene, move the scrollbar to the target section and
   // let onUpdate rotate + relabel. Otherwise rotate the drum directly.
-  function scrollToIndex(i) {
+  function scrollToProgress(p) {
     const max = document.documentElement.scrollHeight - window.innerHeight;
-    window.scrollTo({ top: (i / (N - 1)) * max, behavior: reduceMotion ? "auto" : "smooth" });
+    window.scrollTo({ top: p * max, behavior: reduceMotion ? "auto" : "smooth" });
   }
   function navigate(dir) {
-    const target = Math.max(0, Math.min(N - 1, current + dir));
-    if (target === current) return;
-    if (motionOn) { scrollToIndex(target); }
-    else { setActive(target); if (window.RRScene && window.RRScene.rotateTo) window.RRScene.rotateTo(target); }
+    const target = ((current + dir) % N + N) % N;   // wrap around, matching the looping drum
+    if (motionOn) {
+      // stepping forward past the last section closes the loop at the bottom (p = 1)
+      const p = (dir > 0 && target === 0) ? 1 : target / N;
+      scrollToProgress(p);
+    } else {
+      setActive(target);
+      if (window.RRScene && window.RRScene.rotateTo) window.RRScene.rotateTo(target);
+    }
   }
 
   if (prev) prev.addEventListener("click", () => navigate(-1));
