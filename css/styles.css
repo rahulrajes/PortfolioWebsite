@@ -402,8 +402,9 @@ body.has-toggled .mode-toggle { display: none; }
   color: var(--ink); pointer-events: none;
 }
 #lightbulb.dropped { display: flex; pointer-events: auto; cursor: pointer; }
+#lightbulb.dropping { color: rgba(255, 255, 255, 0.5); } /* faint unlit outline while it hangs in the dark */
 .bulb-rope { width: 2px; height: 2.2rem; background: currentColor; opacity: 0.5; }
-.bulb-glass { width: 30px; height: auto; margin-top: -1px; }
+.bulb-glass { width: 30px; height: auto; margin-top: -1px; transform: rotate(180deg); } /* base up (hanging) */
 /* Glows in dark mode, dim in light — follows the theme automatically */
 :root[data-theme="dark"] #lightbulb { color: #fff7ec; }   /* whiter light */
 :root[data-theme="dark"] #lightbulb .bulb-glass {
@@ -416,6 +417,22 @@ body.has-toggled .mode-toggle { display: none; }
                      drop-shadow(0 0 22px rgba(255, 245, 225, 0.45)); }
   50%      { filter: drop-shadow(0 0 14px rgba(255, 252, 245, 1))
                      drop-shadow(0 0 34px rgba(255, 246, 228, 0.65)); }
+}
+s
+/* Brief electrical flicker right before the bulb settles to its steady glow */
+:root[data-theme="dark"] #lightbulb.flickering .bulb-glass {
+  animation: bulb-flicker 0.7s linear 1;
+}
+/* Paired stops with ~1% gaps = near-instant on/off snaps (electrical flicker) */
+@keyframes bulb-flicker {
+  0%, 7%    { opacity: 0.12; }
+  8%, 16%   { opacity: 1; }
+  17%, 24%  { opacity: 0.3; }
+  25%, 40%  { opacity: 1; }
+  41%, 48%  { opacity: 0.15; }
+  49%, 62%  { opacity: 1; }
+  63%, 70%  { opacity: 0.5; }
+  71%, 100% { opacity: 1; }
 }
 
 /* ==================== 9. FOOTER ==================== */

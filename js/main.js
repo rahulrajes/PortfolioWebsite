@@ -73,13 +73,25 @@ function dropBulbToDark(overlay, bulb) {
     if (overlay) window.setTimeout(() => overlay.classList.remove("active"), 300);
     return;
   }
+  const glass = bulb.querySelector(".bulb-glass");
   overlay.classList.add("active");
   window.gsap.set(bulb, { xPercent: -50, y: -110, opacity: 1 });   // y = drop distance
+  bulb.classList.add("dropping");                            // faint unlit outline
   window.gsap.timeline()
     .to({}, { duration: 0.5 })                                 // hold dark
     .to(bulb, { y: 0, duration: 0.7, ease: "bounce.out" })    // short drop
-    .add(() => applyTheme("dark"))                            // starts glowing (theme-driven)
-    .to({}, { duration: 0.35 })
+    .to({}, { duration: 0.2 })                                // hang unlit a beat longer
+    .add(() => {                                              // then flicker to life
+      applyTheme("dark");
+      // inline animation wins over the steady-glow rule reliably
+      if (glass) glass.style.animation = "bulb-flicker 0.7s linear 1";
+    })
+    .to({}, { duration: 0.75 })                               // let the full flicker play
+    .add(() => {                                              // settle to steady glow
+      bulb.classList.remove("dropping");
+      if (glass) glass.style.animation = "";                 // hand back to the CSS radiate
+    })
+    .to({}, { duration: 0.2 })
     .add(() => overlay.classList.remove("active"));           // reveal; bulb stays hanging
 }
 
