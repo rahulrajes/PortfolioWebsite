@@ -76,7 +76,7 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.0; marg
 }
 
 .loader-ring {
-  position: fixed; left: 50%; top: 50%; z-index: 101;
+  position: fixed; left: 50%; top: 35%; z-index: 101;
   width: 104px; height: 104px; transform: translate(-50%, 4.2rem);
 }
 .loader-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); } /* start the fill at 12 o'clock */
@@ -92,36 +92,145 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.0; marg
   font-family: var(--grotesk); font-size: 0.95rem; letter-spacing: 0.06em; color: var(--ink-soft);
 }
 
-/* ==================== 5. WORDMARK (loader name -> top masthead) ==================== */
-/* One element does double duty: big + centered while loading, then it STRETCHES
-   horizontally (letter-spacing widens) and RISES to the top as a masthead.
-   Both the size change (scale) and the move (translateY) are transforms, so the
-   morph stays on the GPU; the horizontal stretch rides on letter-spacing. */
+/* ==================== 5. WORDMARK (curved 3D name on the drum's rim) ==================== */
+/* Resting: the name sits on the drum's top rim, curved in 3D (per-letter — JS
+   sets each letter's rotateY/translateZ so the ends bow outward). While loading
+   it drops toward center and grows; on reveal it rises to the rim. .wordmark
+   provides the perspective + the loader->reveal morph; .wordmark__curve holds
+   the 3D letters. */
 .wordmark {
-  position: fixed; left: 0; right: 0; top: 0; z-index: 102; margin: 0;
-  text-align: center; font-family: var(--serif); font-weight: 400; line-height: 1;
-  color: var(--ink); white-space: nowrap; pointer-events: none; user-select: none;
-  font-size: clamp(3rem, 9vw, 6.5rem);      /* big, hero-scale masthead */
-  letter-spacing: 0.04em;                   /* full + solid, not airy */
-  -webkit-text-stroke: 0.6px currentColor;  /* fatten Instrument Serif (it ships no bold weight) */
-  padding-top: var(--space-3);
-  transform: translateY(0) scale(1);        /* resting = at the top */
-  transform-origin: top center;
-  transition: transform 1100ms var(--ease), letter-spacing 1100ms var(--ease);
-  will-change: transform, letter-spacing;
+  position: fixed; left: 0; right: 0; z-index: 102; margin: 0;
+  top: 22.5vh;                                /* resting: on the drum's upper rim (tuned live) */
+  text-align: center; pointer-events: none; user-select: none;
+  perspective: 900px; perspective-origin: 50% 42%;
+  transform: translateY(0) scale(1);        /* resting */
+  transition: transform 1100ms var(--ease);
+  will-change: transform;
+  opacity:0;
+    transition:
+        opacity 450ms var(--ease),
+        transform 1100ms var(--ease);
 }
-/* A slim line resting over the "ajes" (same ink, so it stays part of the mark) */
-.wordmark__over { position: relative; }
-.wordmark__over::before {
-  content: ""; position: absolute; left: -0.02em; right: -0.02em; top: 0.24em;
-  height: 0.07em; background: currentColor; border-radius: 999px;
+.wordmark-loading {
+    opacity : 1;
+    transition:opacity 450ms var(--ease);
+    position: fixed;
+    left: 50%;
+    top: 22.5vh;
+
+    transform: translateX(-50%);
+
+    z-index: 103;
+
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(3.4rem, 9vw, 6rem);
+    line-height: 1;
+    letter-spacing: 0.02em;
+
+    color: var(--ink);
+
+    pointer-events: none;
+    user-select: none;
 }
-/* While loading: compact tracking, a touch larger, and sitting in the UPPER
-   third so it clears the progress ring below it (no overlap with the number). */
+
+.hero-video{
+    position:fixed;
+
+    left:50%;
+    top:5vh;
+
+    transform:translateX(-37%);
+
+    width:clamp(180px, 18vw, 100px);
+
+    z-index:50;
+
+    border-radius:18px;
+
+    overflow:hidden;
+}
+
+.hero-video video{
+    width:100%;
+    display:block;
+}
+
+.wordmark__curve {
+  display: inline-block; position: relative; transform-style: preserve-3d;
+  font-family: var(--serif); font-weight: 400; line-height: 1;
+  color: var(--ink); white-space: nowrap;
+  font-size: clamp(3rem, 8.5vw, 6rem);
+  letter-spacing: 0.04em;
+  -webkit-text-stroke: 1.5px currentColor;  /* fatten Instrument Serif (no bold weight) */
+  transition: color 800ms var(--ease);
+  text-shadow: 0 0 0.35px currentColor;
+  /* JS sets: transform: translateZ(-RADIUS) rotateX(6deg) */
+}
+/* Navy on the beige loader; cream once it's resting on the navy drum (matches
+   the section title, so it stays readable and seamless). */
+
+body:not(.is-loading) .wordmark__curve {
+    color: var(--ink);   /* dark in light mode */
+}
+
+/* Flat wordmark: only during loading */
+body:not(.is-loading) .wordmark-loading {
+    opacity:0;
+    pointer-events:none;
+}
+
+/* Curved wordmark: hidden during loading */
 body.is-loading .wordmark {
-  letter-spacing: 0.02em;
-  transform: translateY(28vh) scale(1.35);
+    opacity:0;
 }
+body:not(.is-loading) .wordmark {
+    opacity: 1;
+}
+
+/* But when dark mode is active, make it light */
+:root[data-theme="dark"] body:not(.is-loading) .wordmark__curve {
+    color: var(--panel-text);
+}   
+
+.ch { display: inline-block; position: relative; transform-origin: 50% 50%; }
+.ch--sp { width: 0.32em; }                  /* the space between "R." and "Rajesh" */
+/* A slim line whose BOTTOM rests on the tops of the "ajes" letters. Drawn
+   per-letter so it curves along with them in 3D. */
+
+/* .bar::before {
+  content: ""; position: absolute; left: -0.05em; right: -0.05em;
+  top: 0.34em; height: 0.07em; background: currentColor; border-radius: 999px;
+} */
+
+.bar::before{
+    content:"";
+    position:absolute;
+
+    /* extend into neighboring letters */
+    left:-0.16em;
+    right:-0.16em;
+
+    /* move up/down */
+    top:0.31em;
+
+    /* thickness */
+    height:0.03em;
+
+    background:currentColor;
+
+    border-radius:999px;
+
+    opacity:1;
+    transition:opacity 1000ms var(--ease) 500ms;
+}
+
+body.is-loading .bar::before{
+    opacity:0;
+}
+
+/* While loading: drop toward center + grow (curve stays); clears the ring below. */
+body.is-loading .wordmark { transform: translateY(14vh) scale(1.4); }
 
 /* ==================== 6. WEBGL STAGE ==================== */
 /* Fixed + full-viewport: the drum stays put while the .scroll-track scrolls
@@ -132,7 +241,7 @@ body.is-loading .wordmark {
 /* A soft contact shadow just under the band, to ground the drum in space
    (replaces the old readable mirror) */
 .floor-sheen {
-  position: absolute; left: 50%; top: 66%; z-index: 3;
+  position: absolute; left: 50%; top: 72%; z-index: 3;
   width: min(680px, 72vw); height: 96px; transform: translate(-50%, -50%);
   pointer-events: none;
   background: radial-gradient(ellipse at center, rgba(8, 15, 26, 0.30), transparent 72%);
@@ -170,12 +279,9 @@ body.is-loading .scroll-hint,
 body.is-loading .dock { opacity: 0; }
 .stage, .section-name, .floor-sheen, .scroll-hint, .dock { transition: opacity 800ms var(--ease); }
 
-/* ==================== 6c. SCROLL TRACK + HINT ==================== */
-/* The track only takes up scroll height when motion is enabled (JS adds
-   .motion-ok). Under reduced-motion the page doesn't scroll; the dock drives. */
-.scroll-track { width: 100%; height: 0; }
-body.motion-ok .scroll-track { height: 520vh; }
-
+/* ==================== 6c. SCROLL HINT ==================== */
+/* Spin is driven by wheel/drag now (no scroll track). The hint just tells the
+   visitor the drum responds to scroll, then retires on first input. */
 .scroll-hint {
   position: fixed; left: 50%; bottom: calc(var(--space-4) + 96px); z-index: 9;
   transform: translateX(-50%);
@@ -275,9 +381,8 @@ body:not(.motion-ok) .scroll-hint { display: none; }
 }
 @media (max-width: 640px) {
   .container { padding-inline: var(--space-3); }
-  .wordmark { letter-spacing: 0.03em; font-size: clamp(2.2rem, 11vw, 3.4rem); }
-  body.is-loading .wordmark { transform: translateY(26vh) scale(1.4); }
-  body.motion-ok .scroll-track { height: 460vh; }
+  .wordmark__curve { letter-spacing: 0.02em; font-size: clamp(2rem, 10vw, 3rem); }
+  body.is-loading .wordmark { transform: translateY(12vh) scale(1.35); }
   .dock { width: calc(100% - var(--space-4)); }
   .dock__main { flex: 1; }
   .dock__label { font-size: 1.2rem; }

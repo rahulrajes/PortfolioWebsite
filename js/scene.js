@@ -1,17 +1,19 @@
 /* ==========================================================================
-   Rahul Rajesh — WebGL scene (Layer 4)
+   Rahul Rajesh — WebGL scene (Layer 5)
    --------------------------------------------------------------------------
-   A THIN curved image "drum": five short panels wrapped around a cylinder,
-   one per section. Rotation is driven by page scroll (see js/main.js, which
-   calls setProgress on each scroll tick); the dock arrows and reduced-motion
-   fallback use rotateTo instead. Panels carry only a faint index number now —
-   the section NAME is crisp HTML in the page (js/main.js), so it never warps
-   on the curve. There is no mirrored reflection anymore; a soft CSS floor
-   sheen (.floor-sheen) grounds the band instead.
+   A tall, segmented curved "drum": six panels wrapped around a cylinder, one
+   per section, with gaps + a dark inner core so it reads as a rotatable object.
+   Rotation is CONTINUOUS and infinite: js/main.js feeds scroll/drag deltas into
+   spin(), and settle() eases to the nearest section when input stops. The drum
+   never hits a stop or reverses at an "end" — it just keeps turning.
 
-   Exposes window.RRScene = { rotateTo, setProgress, reveal, refreshTheme } so
-   js/main.js can drive it. Everything here is optional: if WebGL or Three
-   fails, main.js still runs the page fine.
+   The section NAME shows as crisp HTML in the page (js/main.js); panels carry
+   only a faint index number. Rahul's name is a separate CSS-3D masthead that
+   sits on the drum's top rim (also in the page, not here).
+
+   Exposes window.RRScene = { spin, settle, rotateTo, reveal, refreshTheme,
+   onActiveChange, SEG }. Everything is optional: if WebGL/Three fails, main.js
+   still runs the page fine.
    ========================================================================== */
 
 import * as THREE from "three";
@@ -26,27 +28,27 @@ const PANEL_BOTTOM = "#0d1b2a";
 
 const N = SECTIONS.length;
 const R = 3.15;                     // drum radius
-const H = 1.05;                     // panel height — a thin band, not a tall drum
+const H = 2.2;                      // panel height — a taller band now
 const SEG = (Math.PI * 2) / N;      // arc per panel
 const GAP_ANGLE = SEG * 0.08;       // gap between panels so it reads as a segmented drum
 const CORE_R = R * 0.9;             // dark inner core, seen through the gaps as a recessed shadow
+const EASE = 0.12;                  // how quickly currentY chases targetY each frame
 
 let renderer, scene, camera, drum;
 let ready = false;
 let revealed = false;
-let currentY = 0;                   // current drum rotation (radians)
-let pendingIndex = 0;
+let currentY = angleFor(0);         // eased rotation actually applied to the drum
+let targetY = currentY;             // goal rotation (spin/settle move this)
+let lastActive = 0;
 
 if (canvas && N > 0) {
   try { init(); } catch (e) { console.warn("WebGL scene disabled:", e); }
 }
 
-/* -------- draw a placeholder texture for one panel (index number only) --------
-   The section name used to live here and warped on the curve; it's now crisp
-   HTML in the page. A short 2-digit index tolerates the arc fine. -------- */
+/* -------- draw a placeholder texture for one panel (index number only) -------- */
 function makeTexture(index) {
   const c = document.createElement("canvas");
-  c.width = 1024; c.height = 384;                 // wide + short, matching the thin band
+  c.width = 1024; c.height = 640;
   const ctx = c.getContext("2d");
 
   const g = ctx.createLinearGradient(0, 0, 0, c.height);
@@ -55,9 +57,9 @@ function makeTexture(index) {
 
   // large, faint index number centered on the panel
   ctx.fillStyle = "rgba(240,235,225,0.16)";
-  ctx.font = '600 220px "Schibsted Grotesk", sans-serif';
+  ctx.font = '600 320px "Schibsted Grotesk", sans-serif';
   ctx.textBaseline = "middle"; ctx.textAlign = "center";
-  ctx.fillText(String(index + 1).padStart(2, "0"), c.width / 2, c.height / 2 + 6);
+  ctx.fillText(String(index + 1).padStart(2, "0"), c.width / 2, c.height / 2 + 8);
 
   // darken the left/right edges so each panel reads as a curved facet (fake shading)
   const hg = ctx.createLinearGradient(0, 0, c.width, 0);
@@ -73,22 +75,16 @@ function makeTexture(index) {
   return tex;
 }
 
-/* -------- build one curved panel (a cylinder segment) --------
-   The arc is trimmed by GAP_ANGLE and centered in its slot, leaving a gap on
-   each side so the panels read as separate tiles on a drum. -------- */
+/* -------- one curved panel (a cylinder segment), trimmed by GAP_ANGLE -------- */
 function makePanel(i) {
   const geo = new THREE.CylinderGeometry(
     R, R, H, 48, 1, true, i * SEG + GAP_ANGLE / 2, SEG - GAP_ANGLE
   );
-  const mat = new THREE.MeshBasicMaterial({
-    map: makeTexture(i),
-    side: THREE.DoubleSide,
-  });
+  const mat = new THREE.MeshBasicMaterial({ map: makeTexture(i), side: THREE.DoubleSide });
   return new THREE.Mesh(geo, mat);
 }
 
-/* -------- dark inner core: a full cylinder just inside the tiles, so the gaps
-   between tiles reveal a recessed dark surface (reads as shadow / depth) -------- */
+/* -------- dark inner core seen through the gaps as recessed shadow/depth -------- */
 function makeCore() {
   const geo = new THREE.CylinderGeometry(CORE_R, CORE_R, H, 64, 1, true);
   const mat = new THREE.MeshBasicMaterial({ color: 0x070e18, side: THREE.DoubleSide });
@@ -101,16 +97,15 @@ function init() {
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
-  camera.position.set(0, 0, 9);
+  camera.position.set(0, 0, 10);
 
-  // Build the drum once fonts are ready (so the index digits use the real font)
   const build = () => {
     drum = new THREE.Group();
     drum.add(makeCore());
     for (let i = 0; i < N; i++) drum.add(makePanel(i));
+    drum.rotation.y = currentY;
     scene.add(drum);
     ready = true;
-    rotateTo(pendingIndex, true);         // snap to the active section
     if (revealed) playReveal();
   };
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(build);
@@ -126,46 +121,34 @@ function resize() {
   const h = canvas.clientHeight || window.innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
-  // pull the camera back on tall/narrow (portrait) screens so the drum fits
-  camera.position.z = camera.aspect < 1 ? 12.5 : 9;
+  // pull the camera back on tall/narrow (portrait) screens so the taller drum fits
+  camera.position.z = camera.aspect < 1 ? 13.5 : 10;
   camera.updateProjectionMatrix();
 }
 
-/* -------- angle that brings panel i to the front (+Z) -------- */
-function angleFor(i) { return -(i * SEG + SEG / 2); }
-
-/* -------- rotate the drum so panel i faces the camera (shortest path) --------
-   Used by the dock arrows / keyboard and by the reduced-motion fallback. When
-   scroll drives the scene, setProgress is used instead. -------- */
-function rotateTo(i, immediate) {
-  pendingIndex = i;
-  if (!ready) return;
-  const base = angleFor(i);
-  const twoPi = Math.PI * 2;
-  let diff = ((base - currentY) % twoPi + twoPi) % twoPi;
-  if (diff > Math.PI) diff -= twoPi;      // choose the shorter direction
-  const target = currentY + diff;
-  currentY = target;
-
-  if (immediate || reduce || !window.gsap) {
-    drum.rotation.y = target;
-  } else {
-    window.gsap.to(drum.rotation, { y: target, duration: 1.0, ease: "power3.inOut" });
-  }
+/* -------- section-center angle math -------- */
+function angleFor(i) { return -(SEG / 2) - i * SEG; }         // brings panel i to the front (+Z)
+function nearestSnap(y) {                                     // closest section-center angle to y
+  const m = Math.round(-(y + SEG / 2) / SEG);
+  return -(SEG / 2) - m * SEG;
+}
+function activeIndex(y) {                                     // which section is front-most at rotation y
+  const m = Math.round(-(y + SEG / 2) / SEG);
+  return ((m % N) + N) % N;
 }
 
-/* -------- scroll-driven rotation --------
-   progress 0..1 maps to ONE FULL 360° turn: p=0 -> panel 0 at front, and by
-   p=1 the drum has come all the way back around to panel 0 (so scrolling past
-   the last section loops to the first instead of reversing). ScrollTrigger's
-   scrub already smooths this, so we set the rotation directly (no tween). -------- */
-function setProgress(p) {
-  const clamped = Math.max(0, Math.min(1, p));
-  pendingIndex = Math.round(clamped * N) % N;
-  if (!ready) return;
-  const target = -(SEG / 2) - clamped * Math.PI * 2;
-  currentY = target;
-  drum.rotation.y = target;
+/* -------- continuous, infinite rotation API -------- */
+function spin(delta) { targetY += delta; }                    // unbounded → never stops or reverses at an end
+function settle() { targetY = nearestSnap(targetY); }         // ease to the nearest section
+
+/* -------- jump to a specific section (dock arrows / keyboard / reduced-motion) -------- */
+function rotateTo(i, immediate) {
+  const twoPi = Math.PI * 2;
+  const base = angleFor(i);
+  let diff = ((base - targetY) % twoPi + twoPi) % twoPi;
+  if (diff > Math.PI) diff -= twoPi;                          // shortest direction
+  targetY += diff;
+  if (immediate || reduce || !ready) { currentY = targetY; if (drum) drum.rotation.y = currentY; }
 }
 
 /* -------- intro reveal (called by the loader once it hits 100%) -------- */
@@ -179,12 +162,21 @@ function playReveal() {
 
 function refreshTheme() { /* panels are theme-independent for now; hook kept for later */ }
 
-function tick(t) {
+function tick() {
   requestAnimationFrame(tick);
-  if (ready && !reduce) {
-    drum.position.y = Math.sin(t * 0.0006) * 0.05;   // gentle idle float
+  if (ready) {
+    currentY += (targetY - currentY) * EASE;
+    if (Math.abs(targetY - currentY) < 1e-4) currentY = targetY;
+    drum.rotation.y = currentY;
+
+    const idx = activeIndex(currentY);
+    if (idx !== lastActive) {
+      lastActive = idx;
+      if (typeof api.onActiveChange === "function") api.onActiveChange(idx);
+    }
   }
   if (renderer) renderer.render(scene, camera);
 }
 
-window.RRScene = { rotateTo, setProgress, reveal, refreshTheme };
+const api = { spin, settle, rotateTo, reveal, refreshTheme, onActiveChange: null, SEG };
+window.RRScene = api;
