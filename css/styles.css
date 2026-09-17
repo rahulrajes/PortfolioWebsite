@@ -75,6 +75,24 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.0; marg
   background: var(--bg);
 }
 
+#theme-transition{
+    position:fixed;
+    inset:0;
+
+    background:#08131F;
+
+    opacity:0;
+    pointer-events:none;
+
+    z-index:9999;
+
+    transition:opacity 250ms ease;
+}
+
+#theme-transition.active{
+    opacity:1;
+}
+
 .loader-ring {
   position: fixed; left: 50%; top: 35%; z-index: 101;
   width: 104px; height: 104px; transform: translate(-50%, 4.2rem);
@@ -138,9 +156,13 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.0; marg
     position:fixed;
 
     left:50%;
-    top:5vh;
+    /* Anchor to the SAME line as the wordmark (its top), so they stay locked
+       together on any screen. The name's line is .wordmark's `top` below. */
+    top:22.5vh;
 
-    transform:translateX(-37%);
+    /* -100% sits the video's BOTTOM on that line (just above the name).
+       Make it more negative (e.g. -110%) to open a small gap. */
+    transform:translate(-37%, -135%);
 
     width:clamp(180px, 18vw, 100px);
 
@@ -361,6 +383,40 @@ body:not(.motion-ok) .scroll-hint { display: none; }
 }
 .mode-toggle:hover { border-color: var(--accent); }
 .mode-toggle svg { width: 18px; height: 18px; display: block; }
+
+/* Corner moon button: only triggers the very first light->dark, then hides
+   (the hanging bulb becomes the toggle). */
+.mode-toggle .icon-bulb { display: none; }
+body.has-toggled .mode-toggle { display: none; }
+
+/* The hanging lightbulb: drops in once, then STAYS as the persistent toggle.
+   ---- EDIT THESE ----
+   size          -> .bulb-glass width
+   how far hangs -> .bulb-rope height
+   screen spot   -> #lightbulb top / left
+   drop distance -> js/main.js dropBulbToDark() y value */
+#lightbulb {
+  position: fixed; left: 44%; top: 0; z-index: 10000;
+  transform: translateX(-50%);
+  display: none; flex-direction: column; align-items: center;
+  color: var(--ink); pointer-events: none;
+}
+#lightbulb.dropped { display: flex; pointer-events: auto; cursor: pointer; }
+.bulb-rope { width: 2px; height: 2.2rem; background: currentColor; opacity: 0.5; }
+.bulb-glass { width: 30px; height: auto; margin-top: -1px; }
+/* Glows in dark mode, dim in light — follows the theme automatically */
+:root[data-theme="dark"] #lightbulb { color: #fff7ec; }   /* whiter light */
+:root[data-theme="dark"] #lightbulb .bulb-glass {
+  filter: drop-shadow(0 0 10px rgba(255, 250, 240, 0.95))
+          drop-shadow(0 0 26px rgba(255, 245, 225, 0.55));
+  animation: bulb-radiate 3.6s var(--ease) infinite;   /* ever-so-slight breathing */
+}
+@keyframes bulb-radiate {
+  0%, 100% { filter: drop-shadow(0 0 9px rgba(255, 250, 240, 0.9))
+                     drop-shadow(0 0 22px rgba(255, 245, 225, 0.45)); }
+  50%      { filter: drop-shadow(0 0 14px rgba(255, 252, 245, 1))
+                     drop-shadow(0 0 34px rgba(255, 246, 228, 0.65)); }
+}
 
 /* ==================== 9. FOOTER ==================== */
 .footer {
