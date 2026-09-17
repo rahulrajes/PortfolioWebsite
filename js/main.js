@@ -17,18 +17,94 @@ const N = S.length;
 let current = 0;                       // active section index, shared across B–E
 let swapTimer = null;
 
-/* ---- A. THEME TOGGLE ---- */
-function initThemeToggle() {
+/* ---- A. THEME TOGGLE (lightbulb dark-mode narrative) ---- */
+function setHeroVideo(theme) {
+  const v = document.getElementById("heroVideo");
+  if (!v) return;
+  const src = theme === "dark" ? "assets/video/night.mp4" : "assets/video/light.mp4";
+  const s = v.querySelector("source");
+  if (!s || s.getAttribute("src") === src) return;
+  s.setAttribute("src", src);
+  v.load();
+  const p = v.play();
+  if (p && p.catch) p.catch(() => {});
+}
+
+function applyTheme(theme) {
   const root = document.documentElement;
+  if (theme === "dark") root.setAttribute("data-theme", "dark");
+  else root.removeAttribute("data-theme");
+  setHeroVideo(theme);
+  if (window.RRScene && window.RRScene.refreshTheme) window.RRScene.refreshTheme();
+}
+
+let bulbDropped = false;
+
+// Toggles AFTER the bulb has dropped: quick overlay fade + swap. The glow
+// follows the theme via CSS, so the hanging bulb just brightens / dims.
+function toggleTheme(overlay) {
+  const goingDark = document.documentElement.getAttribute("data-theme") !== "dark";
+  if (overlay && window.gsap && !reduceMotion) {
+    window.gsap.timeline()
+      .add(() => overlay.classList.add("active"))
+      .to({}, { duration: 0.3 })
+      .add(() => applyTheme(goingDark ? "dark" : "light"))
+      .add(() => overlay.classList.remove("active"))
+      .to({}, { duration: 0.3 });
+  } else if (overlay) {
+    overlay.classList.add("active");
+    window.setTimeout(() => applyTheme(goingDark ? "dark" : "light"), 250);
+    window.setTimeout(() => overlay.classList.remove("active"), 520);
+  } else {
+    applyTheme(goingDark ? "dark" : "light");
+  }
+}
+
+// The one-time animation: screen darkens, the bulb drops ~an inch from the top
+// and starts glowing, then STAYS. From here the hanging bulb is the toggle.
+function dropBulbToDark(overlay, bulb) {
+  bulbDropped = true;
+  document.body.classList.add("has-toggled");    // hides the corner moon button
+  bulb.classList.add("dropped");
+  const anim = overlay && window.gsap && !reduceMotion;
+  if (!anim) {
+    if (overlay) overlay.classList.add("active");
+    applyTheme("dark");
+    if (overlay) window.setTimeout(() => overlay.classList.remove("active"), 300);
+    return;
+  }
+  overlay.classList.add("active");
+  window.gsap.set(bulb, { xPercent: -50, y: -110, opacity: 1 });   // y = drop distance
+  window.gsap.timeline()
+    .to({}, { duration: 0.5 })                                 // hold dark
+    .to(bulb, { y: 0, duration: 0.7, ease: "bounce.out" })    // short drop
+    .add(() => applyTheme("dark"))                            // starts glowing (theme-driven)
+    .to({}, { duration: 0.35 })
+    .add(() => overlay.classList.remove("active"));           // reveal; bulb stays hanging
+}
+
+function initThemeToggle() {
   const toggle = document.querySelector("#theme-toggle");
   if (!toggle) return;
-  if (localStorage.getItem("theme") === "dark") root.setAttribute("data-theme", "dark");
+  setHeroVideo("light");                         // always start light
+
+  const overlay = document.getElementById("theme-transition");
+  const bulb = document.getElementById("lightbulb");
+
+  // Corner moon: only triggers the very first light->dark (then it hides).
   toggle.addEventListener("click", () => {
-    const isDark = root.getAttribute("data-theme") === "dark";
-    if (isDark) { root.removeAttribute("data-theme"); localStorage.setItem("theme", "light"); }
-    else        { root.setAttribute("data-theme", "dark"); localStorage.setItem("theme", "dark"); }
-    if (window.RRScene && window.RRScene.refreshTheme) window.RRScene.refreshTheme();
+    if (!bulb) { toggleTheme(overlay); return; } // section pages: simple swap
+    if (!bulbDropped) dropBulbToDark(overlay, bulb);
   });
+
+  // Hanging bulb: the persistent toggle once it has dropped.
+  if (bulb) {
+    const act = () => { if (bulbDropped) toggleTheme(overlay); };
+    bulb.addEventListener("click", act);
+    bulb.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); act(); }
+    });
+  }
 }
 
 /* ---- Shared: reflect the active section in the dock + centered title ---- */
