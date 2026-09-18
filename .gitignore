@@ -10,3 +10,6 @@
 
 # AI tooling (design skill installed locally; not part of the website)
 .claude/
+
+# Large source PNGs for the wheel — compressed .jpg versions are used instead
+assets/img/*.png
