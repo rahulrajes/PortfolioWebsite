@@ -28,7 +28,7 @@ const PANEL_BOTTOM = "#0d1b2a";
 
 const N = SECTIONS.length;
 const R = 3.15;                     // drum radius
-const H = 2.2;                      // panel height — a taller band now
+const H = 1.9;                      // panel height — a taller band now
 const SEG = (Math.PI * 2) / N;      // arc per panel
 const GAP_ANGLE = SEG * 0.08;       // gap between panels so it reads as a segmented drum
 const CORE_R = R * 0.9;             // dark inner core, seen through the gaps as a recessed shadow
@@ -45,8 +45,22 @@ if (canvas && N > 0) {
   try { init(); } catch (e) { console.warn("WebGL scene disabled:", e); }
 }
 
-/* -------- draw a placeholder texture for one panel (index number only) -------- */
-function makeTexture(index) {
+const SCRIM = "rgba(13, 27, 42, 0.45)";   // navy wash over photos so the title stays readable
+
+/* darken the left/right edges so each panel reads as a curved facet (the haze) */
+function drawEdges(ctx, c) {
+  const hg = ctx.createLinearGradient(0, 0, c.width, 0);
+  hg.addColorStop(0, "rgba(0,0,0,0.55)");
+  hg.addColorStop(0.14, "rgba(0,0,0,0)");
+  hg.addColorStop(0.86, "rgba(0,0,0,0)");
+  hg.addColorStop(1, "rgba(0,0,0,0.55)");
+  ctx.fillStyle = hg; ctx.fillRect(0, 0, c.width, c.height);
+}
+
+/* -------- panel texture: a navy placeholder that swaps to the section photo --------
+   Returns immediately with the navy base (also the fallback if the image fails);
+   the photo is drawn in on load (cover-cropped) + a navy scrim + the edge haze. */
+function makeTexture(index, imgSrc) {
   const c = document.createElement("canvas");
   c.width = 1024; c.height = 640;
   const ctx = c.getContext("2d");
@@ -54,24 +68,25 @@ function makeTexture(index) {
   const g = ctx.createLinearGradient(0, 0, 0, c.height);
   g.addColorStop(0, PANEL_TOP); g.addColorStop(1, PANEL_BOTTOM);
   ctx.fillStyle = g; ctx.fillRect(0, 0, c.width, c.height);
-
-  // large, faint index number centered on the panel
-  ctx.fillStyle = "rgba(240,235,225,0.16)";
-  ctx.font = '600 320px "Schibsted Grotesk", sans-serif';
-  ctx.textBaseline = "middle"; ctx.textAlign = "center";
-  ctx.fillText(String(index + 1).padStart(2, "0"), c.width / 2, c.height / 2 + 8);
-
-  // darken the left/right edges so each panel reads as a curved facet (fake shading)
-  const hg = ctx.createLinearGradient(0, 0, c.width, 0);
-  hg.addColorStop(0, "rgba(0,0,0,0.55)");
-  hg.addColorStop(0.14, "rgba(0,0,0,0)");
-  hg.addColorStop(0.86, "rgba(0,0,0,0)");
-  hg.addColorStop(1, "rgba(0,0,0,0.55)");
-  ctx.fillStyle = hg; ctx.fillRect(0, 0, c.width, c.height);
+  drawEdges(ctx, c);
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
+
+  if (imgSrc) {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.max(c.width / img.width, c.height / img.height);   // cover-fit
+      const dw = img.width * scale, dh = img.height * scale;
+      ctx.drawImage(img, (c.width - dw) / 2, (c.height - dh) / 2, dw, dh);
+      ctx.fillStyle = SCRIM; ctx.fillRect(0, 0, c.width, c.height);          // readability wash
+      drawEdges(ctx, c);
+      tex.needsUpdate = true;
+    };
+    img.onerror = () => { /* keep the navy fallback */ };
+    img.src = imgSrc;
+  }
   return tex;
 }
 
@@ -80,7 +95,7 @@ function makePanel(i) {
   const geo = new THREE.CylinderGeometry(
     R, R, H, 48, 1, true, i * SEG + GAP_ANGLE / 2, SEG - GAP_ANGLE
   );
-  const mat = new THREE.MeshBasicMaterial({ map: makeTexture(i), side: THREE.DoubleSide });
+  const mat = new THREE.MeshBasicMaterial({ map: makeTexture(i, SECTIONS[i] && SECTIONS[i].img), side: THREE.DoubleSide });
   return new THREE.Mesh(geo, mat);
 }
 

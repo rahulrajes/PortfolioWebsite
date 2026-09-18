@@ -18,12 +18,12 @@
   <!-- The six sections: single source of truth, read by both scripts below -->
   <script>
     window.RR_SECTIONS = [
-      { label: "About",       href: "about.html" },
-      { label: "Academic",    href: "academic.html" },
-      { label: "Photography", href: "photography.html" },
-      { label: "Journey",     href: "journey.html" },
-      { label: "Blog",        href: "blogs.html" },
-      { label: "Rahul.AI",    href: "rahul-ai.html" }
+      { label: "About",       href: "about.html",       img: "assets/img/about.jpg" },
+      { label: "Academic",    href: "academic.html",    img: "assets/img/academic.jpg" },
+      { label: "Photography", href: "photography.html", img: "assets/img/photography.jpg" },
+      { label: "Journey",     href: "journey.html",     img: "assets/img/journey.jpg" },
+      { label: "Blog",        href: "blogs.html",       img: "assets/img/blog.jpg" },
+      { label: "Rahul.AI",    href: "rahul-ai.html",    img: "assets/img/rahulai.jpg" }
     ];
   </script>
 
@@ -121,13 +121,6 @@
       <button class="dock__arrow" id="prevBtn" type="button" aria-label="Previous section">&lsaquo;</button>
       <button class="dock__arrow" id="nextBtn" type="button" aria-label="Next section">&rsaquo;</button>
     </div>
-
-    <button class="dock__enter" id="enterBtn" type="button" aria-label="Open this section">
-      <svg class="dock__ring" viewBox="0 0 64 64" aria-hidden="true">
-        <circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 7" />
-      </svg>
-      <span class="dock__enter-mark" aria-hidden="true">&nearr;</span>
-    </button>
   </div>
 
   <!-- Theme + preloader + dock (plain script, also used on section pages) -->
