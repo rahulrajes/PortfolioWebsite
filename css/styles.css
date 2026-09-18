@@ -158,11 +158,11 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.0; marg
     left:50%;
     /* Anchor to the SAME line as the wordmark (its top), so they stay locked
        together on any screen. The name's line is .wordmark's `top` below. */
-    top:22.5vh;
+    top:22.75vh;
 
     /* -100% sits the video's BOTTOM on that line (just above the name).
        Make it more negative (e.g. -110%) to open a small gap. */
-    transform:translate(-37%, -135%);
+    transform:translate(-32%, -135%) rotate(2.5deg);
 
     width:clamp(180px, 18vw, 100px);
 
