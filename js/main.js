@@ -49,6 +49,7 @@ function toggleTheme(overlay) {
       .add(() => overlay.classList.add("active"))
       .to({}, { duration: 0.3 })
       .add(() => applyTheme(goingDark ? "dark" : "light"))
+      .to({}, { duration: 0.3 })
       .add(() => overlay.classList.remove("active"))
       .to({}, { duration: 0.3 });
   } else if (overlay) {
