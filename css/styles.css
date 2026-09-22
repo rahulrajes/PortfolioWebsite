@@ -74,6 +74,11 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.0; marg
   position: fixed; inset: 0; z-index: 100;
   background: var(--bg);
 }
+/* Arriving from a section page (#home): no loader, no intro morph — the home
+   appears already settled. */
+html.skip-loader .preloader { display: none; }
+html.skip-loader .wordmark { transition: none; }
+html.skip-loader .wordmark-loading { display: none; }
 
 #theme-transition{
     position:fixed;
@@ -359,10 +364,35 @@ body:not(.motion-ok) .scroll-hint { display: none; }
 }
 .topbar__brand { font-family: var(--serif); font-size: 1.4rem; color: var(--ink); }
 .topbar__brand:hover { text-decoration: none; }
-.topbar__right { display: flex; align-items: center; gap: var(--space-3); }
-.topbar__right a { color: var(--ink-soft); font-size: 0.95rem; }
-.topbar__right a:hover { color: var(--ink); text-decoration: none; }
+.topbar__right { display: flex; align-items: center; gap: var(--space-2); }
+.topbar__home { color: var(--ink-soft); font-size: 0.95rem; }
+.topbar__home:hover { color: var(--ink); text-decoration: none; }
 .topbar .mode-toggle { position: static; }
+
+/* Social icon cluster in the top bar (email reveals its address on hover) */
+.socials { display: inline-flex; align-items: center; gap: 0.35rem; }
+.social {
+  display: inline-grid; place-items: center; width: 34px; height: 34px;
+  color: var(--ink-soft); border-radius: 50%; cursor: pointer; text-decoration: none;
+  transition: color 200ms var(--ease), background 200ms var(--ease), transform 200ms var(--ease);
+}
+.social:hover { color: var(--ink); background: var(--bg-2); text-decoration: none; transform: translateY(-1px); }
+.social svg { width: 18px; height: 18px; display: block; }
+
+.social--email { position: relative; }
+.social__reveal {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  white-space: nowrap; font-size: 0.82rem; color: var(--ink);
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 0.3rem 0.55rem;
+  opacity: 0; visibility: hidden; transform: translateY(-4px); pointer-events: none; z-index: 70;
+  transition: opacity 180ms var(--ease), transform 180ms var(--ease), visibility 180ms;
+}
+.social--email:hover .social__reveal,
+.social--email:focus .social__reveal,
+.social--email:focus-within .social__reveal {
+  opacity: 1; visibility: visible; transform: translateY(0); pointer-events: auto;
+}
 
 .section-page {
   min-height: 70vh; display: flex; flex-direction: column; justify-content: center;
@@ -418,7 +448,7 @@ body.has-toggled .mode-toggle { display: none; }
   50%      { filter: drop-shadow(0 0 14px rgba(255, 252, 245, 1))
                      drop-shadow(0 0 34px rgba(255, 246, 228, 0.65)); }
 }
-s
+
 /* Brief electrical flicker right before the bulb settles to its steady glow */
 :root[data-theme="dark"] #lightbulb.flickering .bulb-glass {
   animation: bulb-flicker 0.7s linear 1;
@@ -433,6 +463,97 @@ s
   49%, 62%  { opacity: 1; }
   63%, 70%  { opacity: 0.5; }
   71%, 100% { opacity: 1; }
+}
+
+/* ==================== 8b. ABOUT PAGE ==================== */
+.about { padding-block: var(--space-5) var(--space-6); max-width: 1080px; }
+
+/* Hero: text (eyebrow + title + intro) on the left, portrait on the right.
+   The portrait's height is driven by the text column (align-items: stretch +
+   an absolutely-filled image), so its top lines up with the title and its
+   bottom lands at the end of the intro. */
+.about-hero {
+  display: grid; grid-template-columns: 1.05fr 0.95fr;
+  gap: var(--space-5); align-items: stretch;
+  margin-bottom: var(--space-6);
+}
+.about-hero__title {
+  font-size: clamp(3rem, 10vw, 7rem);
+  letter-spacing: -0.02em; color: var(--ink); line-height: 0.98;
+  margin-bottom: var(--space-4);
+}
+.about-portrait { position: relative; height: 100%; justify-self: stretch; }
+.about-portrait img { position: absolute; inset: 0; }
+
+/* Text blocks */
+.about-block { margin-bottom: var(--space-6); }
+.about-block__head {
+  font-family: var(--grotesk); font-weight: 600;
+  font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: var(--space-3);
+}
+.about-block .prose { max-width: 62ch; }
+
+/* Right-now: a tall photo on the LEFT, and a right column holding the text
+   (top) with a second photo (bottom). The left photo stretches to match the
+   right column's height. */
+.about-block--media {
+  display: grid; grid-template-columns: 0.85fr 1fr;
+  gap: var(--space-5); align-items: stretch;
+}
+.about-media__col { display: grid; gap: var(--space-4); align-content: start; }
+/* Left photo fills the right column's height (image absolute so it doesn't
+   drive the row) — this levels its bottom with the squad photo's bottom. */
+.about-media__tall { position: relative; height: 100%; }
+.about-media__tall img { position: absolute; inset: 0; }
+/* Squad photo (bottom-right): a touch taller so the two photos balance. */
+.about-media__col .about-figure { aspect-ratio: 3 / 2; }
+
+/* Ideas (Spinoza / metanoia) */
+.about-block--ideas { max-width: 72ch; }
+.about-block--ideas .prose { max-width: none; }
+
+/* Ideas + Off-the-clock text on the left; snowboard photo on the right,
+   spanning the full height of both blocks.
+   WIDTH knob -> .about-sidephoto grid-template-columns (2nd value = photo width) */
+.about-sidephoto {
+  display: grid; grid-template-columns: 1fr 0.55fr;
+  gap: var(--space-5); align-items: stretch;
+  margin-bottom: var(--space-6);
+}
+.about-sidephoto__col .about-block:last-child { margin-bottom: 0; }
+.about-sidephoto__img { position: relative; height: 100%; }
+.about-sidephoto__img img { position: absolute; inset: 0; }
+
+/* Figures: framed, subtle hover zoom */
+.about-figure {
+  margin: 0; overflow: hidden; border-radius: var(--radius);
+  border: 1px solid var(--line); background: var(--bg-2);
+  box-shadow: 0 12px 30px rgba(13, 27, 42, 0.08);
+}
+.about-figure img { width: 100%; height: 100%; object-fit: cover; transition: transform 600ms var(--ease); }
+.about-figure:hover img { transform: scale(1.04); }
+
+/* Prose: paragraphs injected from /content text files — one consistent
+   body size/family everywhere (grotesk, inherited from <body>). */
+.prose p { color: var(--ink); font-size: 1.15rem; line-height: 1.65; margin: 0 0 1.15em; }
+.prose p:last-child { margin-bottom: 0; }
+.prose { min-height: 1.6em; }   /* avoids layout jump before fetch resolves */
+.prose a { color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 1px; }
+.prose a:hover { border-color: var(--accent); text-decoration: none; }
+
+/* Gentle scroll-reveal (JS toggles .is-in; reduced-motion reveals instantly) */
+[data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity 700ms var(--ease), transform 700ms var(--ease); }
+[data-reveal].is-in { opacity: 1; transform: none; }
+
+@media (max-width: 720px) {
+  .about-hero,
+  .about-block--media { grid-template-columns: 1fr; }
+  /* Stacked: give the absolutely-filled photos an explicit shape/height. */
+  .about-portrait { height: auto; aspect-ratio: 4 / 5; max-width: 340px; justify-self: start; }
+  .about-media__tall { height: auto; aspect-ratio: 4 / 3; }
+  .about-sidephoto { grid-template-columns: 1fr; }
+  .about-sidephoto__img { height: auto; aspect-ratio: 4 / 5; max-width: 340px; }
 }
 
 /* ==================== 9. FOOTER ==================== */
