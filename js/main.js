@@ -34,6 +34,7 @@ function applyTheme(theme) {
   const root = document.documentElement;
   if (theme === "dark") root.setAttribute("data-theme", "dark");
   else root.removeAttribute("data-theme");
+  try { localStorage.setItem("theme", theme); } catch (e) { /* private mode */ }
   setHeroVideo(theme);
   if (window.RRScene && window.RRScene.refreshTheme) window.RRScene.refreshTheme();
 }
@@ -99,10 +100,21 @@ function dropBulbToDark(overlay, bulb) {
 function initThemeToggle() {
   const toggle = document.querySelector("#theme-toggle");
   if (!toggle) return;
-  setHeroVideo("light");                         // always start light
 
   const overlay = document.getElementById("theme-transition");
   const bulb = document.getElementById("lightbulb");
+  // Theme was already applied to <html> by the inline <head> script from
+  // localStorage; sync the rest of the UI to match it.
+  const startDark = document.documentElement.getAttribute("data-theme") === "dark";
+  setHeroVideo(startDark ? "dark" : "light");
+
+  // If we're loading straight into dark (came back from another page, or a
+  // reload), skip the one-time drop: the bulb is already hanging + lit.
+  if (startDark && bulb) {
+    bulbDropped = true;
+    document.body.classList.add("has-toggled");
+    bulb.classList.add("dropped");
+  }
 
   // Corner moon: only triggers the very first light->dark (then it hides).
   toggle.addEventListener("click", () => {
@@ -145,6 +157,14 @@ function initPreloader() {
   const bar = document.querySelector("#loaderBar");
   const pctEl = document.querySelector("#pct");
   if (!preloader || !pctEl) return;
+
+  // Came from a section page (#home flag): don't replay the loader — drop
+  // straight onto the loaded home. Reveal the scene without the intro morph.
+  if (document.documentElement.classList.contains("skip-loader")) {
+    document.body.classList.remove("is-loading");
+    preloader.hidden = true;
+    return;
+  }
 
   const CIRC = 2 * Math.PI * 54;           // circumference of the ring (r = 54)
   function setPct(p) {

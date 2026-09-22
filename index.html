@@ -6,8 +6,18 @@
   <title>R. Rajesh</title>
   <meta name="description" content="Rahul Rajesh — student, researcher, and photographer at ASU." />
 
-  <!-- Always load in light mode; clear any stored preference -->
-  <script>localStorage.removeItem("theme");</script>
+  <!-- Respect the saved theme so dark mode carries across pages; a fresh
+       visitor (no stored theme) still starts light and gets the bulb drop. -->
+  <script>if (localStorage.getItem("theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");</script>
+  <!-- Arriving from a section page (Home/brand link carries #home): skip the
+       loader and land straight on the loaded home. Strip the flag so a manual
+       refresh here still shows the loader. -->
+  <script>
+    if (location.hash === "#home") {
+      document.documentElement.classList.add("skip-loader");
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
