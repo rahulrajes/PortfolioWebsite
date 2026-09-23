@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Academic — R. Rajesh</title>
   <meta name="description" content="Academic work, research, and projects by Rahul Rajesh." />
-  <script>
-    if (localStorage.getItem("theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");
-  </script>
+  <script>if (localStorage.getItem("theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -42,13 +40,204 @@
     </nav>
   </header>
 
-  <main class="section-page container">
-    <h1 class="section-title">Academic</h1>
-    <p class="section-desc">Coursework, research, and the technical projects behind the résumé. Math and statistics, computer science and AI, at Barrett, The Honors College.</p>
-    <span class="section-status">In progress. Content arrives in a later layer.</span>
+  <main class="academic container">
+    <p class="academic__fields">Computer Science &middot; Mathematics &middot; Studio Art</p>
+
+    <!-- ============ UPCOMING ============ -->
+    <section class="acc-group">
+      <h2 class="acc-group__label">Upcoming</h2>
+      <div class="acc">
+
+        <details class="acc__item">
+          <summary class="acc__head">
+            <span class="acc__lead">
+              <span class="acc__title">Rahul.AI</span>
+              <span class="acc__sub">Personal AI · A digital twin</span>
+            </span>
+            <span class="acc__date">In design</span>
+            <svg class="acc__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+          <div class="acc__body">
+            <p>Rahul.AI is a personal language model — a digital twin you can actually talk to. The idea is to fine-tune a base model on my own corpus (messages, emails, writing, and captured voice) and pair it with a retrieval layer: my data embedded into a vector store and pulled in at query time, so answers stay grounded in things I've actually said and done. With some persona conditioning on top, the goal is a model that responds the way I would rather than a generic assistant. It's still early — I'm mapping out data collection, privacy, and how much can be learned through fine-tuning versus retrieval.</p>
+          </div>
+        </details>
+
+        <details class="acc__item">
+          <summary class="acc__head">
+            <span class="acc__lead">
+              <span class="acc__title">Double-Major &amp; Minor Navigator</span>
+              <span class="acc__sub">EdTech · Course-planning tool</span>
+            </span>
+            <span class="acc__date">Concept</span>
+            <svg class="acc__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+          <div class="acc__body">
+            <p>A course-planning tool for ASU students juggling a double major, a major plus a minor, or a heavy load. It reads the degree requirements across both programs, finds the overlapping and transferable credits, and generates a semester-by-semester plan that satisfies everything at once — so no more flipping between catalogs and advising sheets trying to work out what counts twice. Under the hood it's a degree-audit engine with a shared-credit optimizer and a clean scheduling interface.</p>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ============ CURRENT ============ -->
+    <section class="acc-group">
+      <h2 class="acc-group__label">Current</h2>
+      <div class="acc">
+
+        <details class="acc__item">
+          <summary class="acc__head">
+            <span class="acc__lead">
+              <span class="acc__title">notif</span>
+              <span class="acc__sub">Chrome extension · Developer</span>
+            </span>
+            <span class="acc__date">Sep 2026</span>
+            <svg class="acc__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+          <div class="acc__body">
+            <p>A <a href="https://chromewebstore.google.com/detail/gjhgkgehckbejnibbblcijoibhgdagle" target="_blank" rel="noopener">live Manifest V3 Chrome extension</a> that fires real-time desktop and audio alerts the moment an iClicker or TopHat poll opens, so participation points never slip by. It detects poll events with a MutationObserver on the site's dynamic Angular app and coordinates a content script, service worker, and an offscreen document to play audio around the page's content-security policy — all with zero data collection and least-privilege permissions.</p>
+            <div class="slider" data-slider>
+              <div class="slider__viewport">
+                <div class="slider__track">
+                  <figure class="slider__slide"><img src="assets/img/academic/notif/notif1.jpg" alt="notif — poll alert screenshot" loading="lazy"></figure>
+                  <figure class="slider__slide"><img src="assets/img/academic/notif/notif2.jpg" alt="notif screenshot" loading="lazy"></figure>
+                  <figure class="slider__slide"><img src="assets/img/academic/notif/notif3.jpg" alt="notif screenshot" loading="lazy"></figure>
+                  <figure class="slider__slide"><img src="assets/img/academic/notif/notif4.jpg" alt="notif screenshot" loading="lazy"></figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="acc__item">
+          <summary class="acc__head">
+            <span class="acc__lead">
+              <span class="acc__title">Robotics Research</span>
+              <span class="acc__sub"><a href="https://sunrobotics.lab.asu.edu/" target="_blank" rel="noopener">Prof. Jiefeng Sun's Lab</a> · Simulations &amp; RL Lead</span>
+            </span>
+            <span class="acc__date">Jul 2025 – Present</span>
+            <svg class="acc__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+          <div class="acc__body">
+            <p>In the Robotics Actuators &amp; Dynamics Lab I lead simulation and reinforcement-learning work on a biomimetic spined quadruped. Right now I'm building a ROS2 velocity-estimation pipeline that fuses IMU and OptiTrack motion-capture data through a Kalman filter to cut sensor noise. I'm also training YOLO computer-vision models to detect invasive Diamondback Moths (adult and larval) for a border-biosecurity screening system, and previously built high-fidelity IsaacSim and MuJoCo simulations — joint dynamics, actuator models, RL-ready environments — of the robot to support locomotion and stability work.</p>
+            <div class="slider" data-slider>
+              <div class="slider__viewport">
+                <div class="slider__track">
+                  <figure class="slider__slide"><img src="assets/img/academic/research/squad1.jpg" alt="Spined-quadruped robot" loading="lazy"></figure>
+                  <figure class="slider__slide"><img src="assets/img/academic/research/squad2.jpg" alt="Robot / lab" loading="lazy"></figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="acc__item">
+          <summary class="acc__head">
+            <span class="acc__lead">
+              <span class="acc__title">Semantic-Layer Analytics Agent</span>
+              <span class="acc__sub">CSE 412 Databases · Team of 4</span>
+            </span>
+            <span class="acc__date">Fall 2026</span>
+            <svg class="acc__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+          <div class="acc__body">
+            <p>A databases-course team project: an LLM-powered analytics assistant that lets a junior finance analyst ask revenue and reconciliation questions in plain English over a Brazilian e-commerce dataset (Olist, ~100k orders). Handing questions straight to a model tends to produce plausible-but-wrong SQL, so we put an explicit semantic layer in between — metadata tables that define every metric, dimension, and join once and map them to real columns. A LangGraph agent (Gemini Flash, tools served over an MCP server) classifies intent, resolves the user's terms against that catalog, compiles deterministic SQL, and runs it read-only on PostgreSQL — returning the rows plus a plain-English summary of exactly what was computed.</p>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ============ PAST ============ -->
+    <section class="acc-group">
+      <h2 class="acc-group__label">Past</h2>
+      <div class="acc">
+
+        <details class="acc__item">
+          <summary class="acc__head">
+            <span class="acc__lead">
+              <span class="acc__title">EssilorLuxottica</span>
+              <span class="acc__sub">AI / Data Analytics Intern · New York City</span>
+            </span>
+            <span class="acc__date">May – Jul 2026</span>
+            <svg class="acc__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+          <div class="acc__body">
+            <p>Built an automated ETL pipeline in R that ingests messy SAP and Hyperion extracts — inconsistent schemas, multi-row headers — cleans and joins them, and outputs one unified dataset feeding a live Tableau dashboard, cutting a manual process from ~4 hours to ~15 minutes per cycle. I also contributed to the company's internal RAG analytics assistant: a containerized embedding pipeline (BGE model over BigQuery data → a pgvector-backed PostgreSQL store) plus a BGE reranker that re-scores top-K search results before they reach the LLM, improving retrieval relevance on the team's eval set.</p>
+          </div>
+        </details>
+
+        <details class="acc__item">
+          <summary class="acc__head">
+            <span class="acc__lead">
+              <span class="acc__title">ASU D1 Women's Soccer</span>
+              <span class="acc__sub">Student Manager &amp; Statistical Analyst</span>
+            </span>
+            <span class="acc__date">Dec 2025 – May 2026</span>
+            <svg class="acc__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+          <div class="acc__body">
+            <p>Statistical analyst for ASU's Division I women's soccer program. I built Python (Pandas/NumPy) pipelines to clean and normalize multi-source player-tracking and event-level data across seasons and competitions, then computed availability metrics and percentile-based summaries at the player and team level to support tactical scouting and roster evaluation.</p>
+          </div>
+        </details>
+
+        <details class="acc__item">
+          <summary class="acc__head">
+            <span class="acc__lead">
+              <span class="acc__title">Solar Devils</span>
+              <span class="acc__sub">Integrations Team · 1st, ASU Change the World 2024</span>
+            </span>
+            <span class="acc__date">Aug 2024 – May 2025</span>
+            <svg class="acc__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+          <div class="acc__body">
+            <p>Integrations-team member on ASU's solar-vehicle project. I built a SQLite3 + Python pipeline to ingest and query the car's CAN-bus telemetry network, giving the team structured storage and retrieval, and enabled real-time performance analysis and troubleshooting by exposing vehicle data to on-board visualization systems.</p>
+          </div>
+        </details>
+
+        <details class="acc__item">
+          <summary class="acc__head">
+            <span class="acc__lead">
+              <span class="acc__title">ReThread</span>
+              <span class="acc__sub">AI Sustainable-Shopping Extension · 2nd, DevHacks x Strategy</span>
+            </span>
+            <span class="acc__date">Mar 2025</span>
+            <svg class="acc__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+          <div class="acc__body">
+            <p>An AI-powered sustainable-shopping Chrome extension. It uses computer vision and keyword matching to identify fashion products on a page and surface secondhand resale alternatives (like Poshmark) in real time, mapping recognized items to structured metadata via Google Cloud Vision to nudge shoppers toward textile reuse.</p>
+            <div class="slider" data-slider>
+              <div class="slider__viewport">
+                <div class="slider__track">
+                  <figure class="slider__slide"><img src="assets/img/academic/rethread/rethread1.jpg" alt="ReThread extension" loading="lazy"></figure>
+                  <figure class="slider__slide"><img src="assets/img/academic/rethread/rethread2.jpg" alt="ReThread extension" loading="lazy"></figure>
+                  <figure class="slider__slide"><img src="assets/img/academic/rethread/rethread3.jpg" alt="ReThread extension" loading="lazy"></figure>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="acc__item">
+          <summary class="acc__head">
+            <span class="acc__lead">
+              <span class="acc__title">Simple Banking System</span>
+              <span class="acc__sub">Spring Boot REST API · Developer</span>
+            </span>
+            <span class="acc__date">Feb 2026</span>
+            <svg class="acc__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+          <div class="acc__body">
+            <p>A layered Spring Boot REST API (Controller–Service–Repository) built to practice production backend patterns: Spring Data JPA and Hibernate for ORM, MySQL with HikariCP connection pooling, DTO mapping, and centralized exception handling, with endpoints tested end to end in Postman.</p>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
     <p><a class="back-link" href="index.html#home">&larr; Back to home</a></p>
   </main>
 
+  <script src="js/slider.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
