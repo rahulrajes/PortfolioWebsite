@@ -28,6 +28,8 @@
   }
 
   function setup(root) {
+    if (root.__rrSlider) return;                 // guard against double-init
+    root.__rrSlider = true;
     const viewport = root.querySelector(".slider__viewport");
     const track = root.querySelector(".slider__track");
     const slides = Array.prototype.slice.call(root.querySelectorAll(".slider__slide"));
@@ -105,6 +107,12 @@
     go(0);
   }
 
-  const sliders = document.querySelectorAll("[data-slider]");
-  Array.prototype.forEach.call(sliders, setup);
+  function initAll(scope) {
+    const els = (scope || document).querySelectorAll("[data-slider]");
+    Array.prototype.forEach.call(els, setup);
+  }
+
+  // Reusable: posts.js calls RRSlider.init(node) on sliders it builds after load.
+  window.RRSlider = { init: setup, initAll: initAll };
+  initAll(document);
 })();
