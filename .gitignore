@@ -13,3 +13,9 @@
 
 # Large source PNGs for the wheel — compressed .jpg versions are used instead
 assets/img/*.png
+
+# Academic media — heavy source files; compressed .jpg/.mp4 are committed instead
+assets/img/academic/**/*.png
+assets/img/academic/**/*.PNG
+assets/img/academic/**/*.MOV
+assets/img/academic/**/*.jpeg
