@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    body.studio { background: var(--bg); }
+    .studio__wrap { max-width: 1000px; margin-inline: auto; padding: var(--space-4); }
+    .studio__card {
+      background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px;
+      padding: var(--space-4); margin-bottom: var(--space-4);
+    }
+    .studio__logo { font-family: var(--serif); font-size: 1.8rem; color: var(--ink); margin: 0; }
+    .studio__hint { color: var(--ink-soft); font-size: 0.95rem; margin: var(--space-2) 0 var(--space-3); }
+    .studio__help { color: var(--ink-soft); font-size: 0.85rem; margin-top: var(--space-2); }
+    .studio label { display: block; font-size: 0.82rem; color: var(--ink-soft); margin-bottom: var(--space-2); font-weight: 500; }
+    .studio input[type=text], .studio input[type=password], .studio input[type=date],
+    .studio textarea, .studio select {
+      width: 100%; margin-top: 4px; padding: 0.6rem 0.7rem; font: inherit;
+      color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 5px;
+    }
+    .studio textarea { resize: vertical; line-height: 1.55; font-size: 0.98rem; }
+    .studio__btn {
+      background: var(--accent); color: #fff; border: none; border-radius: 5px;
+      padding: 0.6rem 1.2rem; font: inherit; font-weight: 600; cursor: pointer;
+    }
+    .studio__btn:hover { filter: brightness(1.06); }
+    .studio__link { background: none; border: none; color: var(--ink-soft); cursor: pointer; font: inherit; text-decoration: underline; padding: 0.4rem 0.5rem; }
+    .studio__link:hover { color: var(--ink); }
+    .studio__link--danger:hover { color: #c0392b; }
+    .studio__msg { font-size: 0.85rem; color: var(--ink-soft); min-height: 1.2em; margin: var(--space-2) 0 0; }
+    .studio__msg.is-err { color: #c0392b; }
+    .studio__msg.is-ok { color: #2e7d32; }
+
+    .studio__topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); gap: var(--space-2); }
+    .studio__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .studio__form label { margin-bottom: var(--space-3); }
+    .studio__preview { border: 1px dashed var(--line); border-radius: 6px; padding: var(--space-3); overflow: auto; }
+    .studio__previewhead { font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: var(--space-2); }
+    .studio__filebtn { display: inline-block; cursor: pointer; border: 1px solid var(--line); border-radius: 5px; padding: 0.5rem 0.9rem; color: var(--ink); font-weight: 500; }
+    .studio__filebtn:hover { border-color: var(--accent); }
+    .studio__thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: var(--space-2); }
+    .studio__thumb { position: relative; width: 74px; height: 74px; border-radius: 5px; overflow: hidden; border: 1px solid var(--line); }
+    .studio__thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .studio__thumbx { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border: none; border-radius: 50%; background: rgba(8,19,31,0.7); color: #fff; cursor: pointer; line-height: 1; }
+    .studio__actions { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+    .studio__subhead { font-family: var(--serif); font-size: 1.3rem; color: var(--ink); margin: 0 0 var(--space-2); }
+    .studio__posts { margin-top: var(--space-4); border-top: 1px solid var(--line); padding-top: var(--space-3); }
+    .studio__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: 0.6rem 0; border-bottom: 1px solid var(--line); }
+    .studio__row strong { color: var(--ink); font-weight: 600; }
+    .studio__row span { color: var(--ink-soft); font-size: 0.9rem; }
+    @media (max-width: 720px) { .studio__grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="studio">
+  <div class="studio__wrap">
+
+    <!-- GATE: setup (first time) or unlock -->
+    <section id="gate" class="studio__card">
+      <h1 class="studio__logo">R. Rajesh — Studio</h1>
+
+      <div id="setup" hidden>
+        <p class="studio__hint">First-time setup on this device: paste a GitHub token and choose a passphrase. The token is encrypted in this browser and never leaves it.</p>
+        <label>GitHub token<input id="tokenInput" type="password" autocomplete="off" /></label>
+        <label>Passphrase (you'll enter this each time)<input id="passSet" type="password" autocomplete="new-password" /></label>
+        <button id="saveSetup" class="studio__btn" type="button">Save &amp; unlock</button>
+        <p class="studio__help">Need a token? Create a <b>fine-grained PAT</b> limited to <b>rahulrajes/PortfolioWebsite</b> with <b>Contents: Read and write</b>. <a id="tokenLink" href="#" target="_blank" rel="noopener">Open GitHub token settings &rarr;</a></p>
+      </div>
+
+      <div id="unlock" hidden>
+        <p class="studio__hint">Enter your passphrase to unlock the editor.</p>
+        <label>Passphrase<input id="passUnlock" type="password" autocomplete="current-password" /></label>
+        <button id="doUnlock" class="studio__btn" type="button">Unlock</button>
+        <button id="resetToken" class="studio__link" type="button">Reset / use a different token</button>
+      </div>
+
+      <p id="gateMsg" class="studio__msg"></p>
+    </section>
+
+    <!-- EDITOR -->
+    <section id="editor" class="studio__card" hidden>
+      <div class="studio__topbar">
+        <h1 class="studio__logo">Studio</h1>
+        <div class="studio__actions">
+          <label style="margin:0;">Collection
+            <select id="collection">
+              <option value="blog">Blog</option>
+              <option value="journey">Journey</option>
+            </select>
+          </label>
+          <button id="lockBtn" class="studio__link" type="button">Lock</button>
+        </div>
+      </div>
+
+      <div class="studio__grid">
+        <div class="studio__form">
+          <input type="hidden" id="editId" />
+          <label>Title<input id="title" type="text" placeholder="Post title" /></label>
+          <label>Date<input id="date" type="date" /></label>
+          <label>Body (Markdown: ## heading, **bold**, *italic*, [link](url), - list)
+            <textarea id="body" rows="14" placeholder="Write your post..."></textarea>
+          </label>
+          <div>
+            <label class="studio__filebtn">Add images<input id="imgInput" type="file" accept="image/*" multiple hidden /></label>
+            <div id="thumbs" class="studio__thumbs"></div>
+          </div>
+          <div class="studio__actions">
+            <button id="publishBtn" class="studio__btn" type="button">Publish</button>
+            <button id="clearBtn" class="studio__link" type="button">New / clear</button>
+          </div>
+          <p id="status" class="studio__msg"></p>
+        </div>
+
+        <div class="studio__preview">
+          <div class="studio__previewhead">Live preview</div>
+          <div id="preview" class="prose post__body"></div>
+        </div>
+      </div>
+
+      <div class="studio__posts">
+        <h2 class="studio__subhead">Published &mdash; <span id="collLabel">Blog</span></h2>
+        <div id="postList" class="studio__list"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="js/md.js"></script>
+  <script src="js/studio.js"></script>
+</body>
+</html>
