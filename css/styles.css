@@ -556,6 +556,102 @@ body.has-toggled .mode-toggle { display: none; }
   .about-sidephoto__img { height: auto; aspect-ratio: 4 / 5; max-width: 340px; }
 }
 
+/* ==================== 8c. ACADEMIC PAGE (accordions) ==================== */
+.academic { padding-block: var(--space-5) var(--space-6); max-width: 860px; }
+.academic__fields {
+  font-family: var(--serif); color: var(--ink);
+  font-size: clamp(1.6rem, 4.5vw, 2.3rem); line-height: 1.1; letter-spacing: 0.01em;
+  margin: 0 0 var(--space-5);
+}
+
+.acc-group { margin-bottom: var(--space-5); }
+.acc-group__label {
+  font-family: var(--grotesk); font-weight: 600;
+  font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: var(--space-2);
+}
+/* The stack of dropdowns; a hairline above the first row */
+.acc { border-top: 1px solid var(--line); }
+.acc__item { border-bottom: 1px solid var(--line); }
+
+/* Header row (the clickable summary) */
+.acc__head {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) 0; cursor: pointer; list-style: none;
+  transition: color 200ms var(--ease);
+}
+.acc__head::-webkit-details-marker { display: none; }   /* kill native triangle */
+.acc__lead { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.acc__title { font-family: var(--serif); font-size: 1.5rem; line-height: 1.1; color: var(--ink); }
+.acc__sub { font-family: var(--grotesk); font-size: 0.85rem; color: var(--ink-soft); }
+.acc__sub a { color: var(--ink-soft); border-bottom: 1px solid var(--line); }
+.acc__sub a:hover { color: var(--accent); border-color: var(--accent); text-decoration: none; }
+.acc__date {
+  margin-left: auto; flex: none; white-space: nowrap;
+  font-family: var(--grotesk); font-size: 0.82rem; letter-spacing: 0.02em; color: var(--ink-soft);
+}
+.acc__chevron { flex: none; width: 20px; height: 20px; color: var(--ink-soft); transition: transform 260ms var(--ease); }
+.acc__item[open] .acc__chevron { transform: rotate(180deg); }
+
+/* Hover / open emphasis */
+.acc__head:hover .acc__title,
+.acc__item[open] .acc__title { color: var(--accent); }
+
+/* Body: revealed on open with a soft fade-in */
+.acc__body { padding: 0 0 var(--space-3); max-width: 70ch; }
+.acc__body p { margin: 0; color: var(--ink); font-size: 1.05rem; line-height: 1.65; }
+.acc__body a { color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 1px; }
+.acc__body a:hover { border-color: var(--accent); text-decoration: none; }
+.acc__item[open] .acc__body { animation: acc-reveal 300ms var(--ease); }
+@keyframes acc-reveal {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 560px) {
+  .acc__title { font-size: 1.3rem; }
+  .acc__date { display: none; }   /* dates live on the résumé; keep the row tidy on phones */
+}
+
+/* ---- Media slider (images + video) inside a dropdown ---- */
+.slider { margin-top: var(--space-3); max-width: 620px; }
+.slider__viewport {
+  position: relative; width: 100%; aspect-ratio: 4 / 3;
+  background: #0c1826; border: 1px solid var(--line); border-radius: var(--radius);
+  overflow: hidden;
+}
+.slider__viewport:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.slider__track { display: flex; height: 100%; transition: transform 360ms var(--ease); }
+.slider__slide {
+  flex: 0 0 100%; height: 100%; margin: 0;
+  display: grid; place-items: center;
+}
+.slider__slide.is-clickable { cursor: pointer; }
+.slider__slide img,
+.slider__slide video { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
+
+.slider__arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 38px; height: 38px; display: grid; place-items: center; padding: 0;
+  border: none; border-radius: 50%; cursor: pointer;
+  background: rgba(8, 19, 31, 0.55); color: #fff; font-size: 1.5rem; line-height: 1;
+  transition: background 180ms var(--ease);
+}
+.slider__arrow:hover { background: rgba(8, 19, 31, 0.85); }
+.slider__arrow--prev { left: 10px; }
+.slider__arrow--next { right: 10px; }
+.slider__counter {
+  position: absolute; top: 10px; right: 12px;
+  font-family: var(--grotesk); font-size: 0.72rem; letter-spacing: 0.05em; color: #fff;
+  background: rgba(8, 19, 31, 0.55); padding: 2px 8px; border-radius: 999px;
+}
+.slider__dots { display: flex; justify-content: center; gap: 7px; margin-top: var(--space-2); }
+.slider__dot {
+  width: 8px; height: 8px; padding: 0; border: none; border-radius: 50%; cursor: pointer;
+  background: var(--line); transition: background 180ms var(--ease), transform 180ms var(--ease);
+}
+.slider__dot.is-active { background: var(--accent); transform: scale(1.25); }
+
 /* ==================== 9. FOOTER ==================== */
 .footer {
   border-top: 1px solid var(--line); padding: var(--space-4);
