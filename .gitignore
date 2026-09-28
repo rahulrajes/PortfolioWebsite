@@ -19,3 +19,11 @@ assets/img/academic/**/*.png
 assets/img/academic/**/*.PNG
 assets/img/academic/**/*.MOV
 assets/img/academic/**/*.jpeg
+
+# Photography originals (full-size camera files). tools/build_photos.py turns
+# them into the web copies in assets/img/photography/web/, which ARE committed.
+assets/img/photography/wildlife/
+assets/img/photography/non-wildlife/
+
+# Originkit source (reference only; the site uses the plain-JS ports in js/)
+ui_for_photography/

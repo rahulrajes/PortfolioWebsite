@@ -607,6 +607,66 @@ body.is-loading #lightbulb { opacity: 0; }   /* appears with the home, not over 
 }
 .post__body + .gallery { margin-top: var(--space-4); }
 
+/* ==================== 8e. PHOTOGRAPHY (the void) ==================== */
+/* Always black, whatever the site theme. One screen tall: the name, the
+   pills, then the carousel fills the rest. */
+body.void {
+  --bg: #000; --bg-2: #161616; --ink: #f4efe6; --ink-soft: #8d8d8d; --line: #242424; --accent: #f4efe6;
+  background: #000; color: var(--ink);
+  height: 100vh; height: 100dvh; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.void .topbar { border-bottom-color: transparent; }
+
+/* Arrival: the page starts in the site's own color and dims into black */
+.void-veil {
+  position: fixed; inset: 0; z-index: 100; pointer-events: none;
+  background: #f0ebe1;
+  animation: void-in 1.3s var(--ease) forwards;
+}
+:root[data-theme="dark"] .void-veil { background: #0d1b2a; }
+@keyframes void-in { to { opacity: 0; visibility: hidden; } }
+.photos > * { animation: void-rise 1.1s var(--ease) both; }
+.photos > .photo-tabs { animation-delay: 0.45s; }
+.photos > .glass-hint { animation-delay: 0.9s; }
+.photos > .fluid { animation-delay: 0.35s; }
+@keyframes void-rise { from { opacity: 0; transform: translateY(14px); } }
+
+.photos { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+/* @rahuls__photos — the canvas draws the letters; the plain text is the
+   fallback (no WebGL) and what screen readers read */
+.fluid {
+  position: relative; display: block; flex: none;
+  font-family: var(--serif); font-weight: 400; line-height: 1.45; text-align: center;
+  font-size: clamp(2.3rem, min(9vw, 10.5vh), 6rem);
+  color: var(--ink); touch-action: none; -webkit-tap-highlight-color: transparent;
+}
+.fluid:hover { text-decoration: none; }
+.fluid--on { color: transparent; }
+.fluid__canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* Wildlife / Other */
+.photo-tabs { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: var(--space-2); flex: none; }
+.photo-tab {
+  font: 500 0.82rem/1 var(--grotesk); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-soft); background: transparent; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px; padding: 0.55rem 1.1rem;
+  transition: color 200ms var(--ease), background 200ms var(--ease), border-color 200ms var(--ease);
+}
+.photo-tab:hover { color: var(--ink); border-color: #3a3a3a; }
+.photo-tab[aria-selected="true"] { color: #000; background: var(--ink); border-color: var(--ink); }
+
+/* The carousel canvas fills this box */
+.glass { position: relative; flex: 1; min-height: 240px; overflow: hidden; touch-action: none; }
+.glass--grid { overflow-y: auto; touch-action: auto; padding: 0 var(--space-4); }
+.glass-hint {
+  flex: none; margin: 0; padding: var(--space-1) var(--space-3) var(--space-3); text-align: center;
+  font-size: 0.74rem; letter-spacing: 0.12em; text-transform: uppercase; color: #6f6f6f;
+}
+.void .lightbox { background: rgba(0, 0, 0, 0.92); }
+@media (hover: none) { .glass-hint { font-size: 0.68rem; } }
+
 /* ==================== 9. FOOTER ==================== */
 .footer {
   border-top: 1px solid var(--line); padding: var(--space-4);

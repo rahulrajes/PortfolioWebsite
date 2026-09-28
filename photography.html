@@ -4,14 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Photography — Rahul Rajesh</title>
-  <meta name="description" content="Wildlife and portrait photography by Rahul Rajesh." />
+  <meta name="description" content="Wildlife and everyday photography by Rahul Rajesh." />
   <script>if (localStorage.getItem("theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
+  <!-- Three.js for the glass carousel (same version as the landing page) -->
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+  </script>
 </head>
-<body>
+<!-- The void: this page is always black, whatever the site theme is. -->
+<body class="void">
+  <!-- Fades from the site's background into black on arrival -->
+  <div class="void-veil" aria-hidden="true"></div>
+
   <header class="topbar">
     <a class="topbar__brand" href="index.html#home">Rahul Rajesh</a>
     <nav class="topbar__right">
@@ -31,22 +39,26 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
         </a>
       </span>
-      <button class="mode-toggle" id="theme-toggle" type="button" aria-label="Switch theme">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M12 3 a9 9 0 0 1 0 18 z" fill="currentColor"/>
-        </svg>
-      </button>
     </nav>
   </header>
 
-  <main class="section-page container">
-    <h1 class="section-title">Photography</h1>
-    <p class="section-desc">Wildlife and portraits. The work I make away from the screen, and where a lot of the personality lives.</p>
-    <span class="section-status">In progress. Content arrives in a later layer.</span>
-    <p><a class="back-link" href="index.html#home">&larr; Back to home</a></p>
+  <main class="photos">
+    <!-- Fluid text: move the cursor through the letters to stir color in -->
+    <a class="fluid" data-fluid-text href="https://www.instagram.com/rahuls__photos/" target="_blank" rel="noopener">@rahuls__photos</a>
+
+    <div class="photo-tabs" role="tablist" aria-label="Photo sets">
+      <button class="photo-tab" type="button" role="tab" data-set="wildlife" aria-selected="true">Wildlife</button>
+      <button class="photo-tab" type="button" role="tab" data-set="other" aria-selected="false">Other</button>
+    </div>
+
+    <!-- Liquid glass carousel (js/photos.js fills it from content/photos.json) -->
+    <div class="glass" data-glass aria-label="Photo carousel"></div>
+    <p class="glass-hint">Scroll or drag &middot; click a photo to focus &middot; click again for full size</p>
   </main>
 
   <script src="js/main.js"></script>
+  <script src="js/gallery.js"></script>
+  <script src="js/fluid-text.js"></script>
+  <script type="module" src="js/photos.js"></script>
 </body>
 </html>
