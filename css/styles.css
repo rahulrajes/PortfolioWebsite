@@ -26,6 +26,18 @@
   /* Text that sits ON the navy band (band is theme-independent, so this is too) */
   --panel-text: #f4efe6;
 
+  /* Landing composition (the name + hanging bulb stack above the drum).
+     scene.js sets --drum-top/--drum-bottom (px) once the drum is measured. */
+  --name-size: clamp(2.6rem, min(8.5vw, 11vh), 6rem);  /* size of "Rahul Rajesh" */
+  --name-gap: 14px;            /* space between the name and the drum's top */
+  --bulb-w: 30px;              /* width of the hanging bulb */
+  --bulb-gap: 12px;            /* space between the bulb and the name */
+  --ring: 104px;               /* loading ring diameter */
+  --load-gap: 28px;            /* space between the name and the ring while loading */
+  /* where the name sits: resting (above the drum) and loading (name + ring centered) */
+  --rest-top: calc(var(--drum-top, 25vh) - var(--name-gap) - var(--name-size));
+  --load-top: calc(50vh - (var(--name-size) + var(--load-gap) + var(--ring)) / 2);
+
   --radius: 3px;
   --max-width: 1160px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -68,17 +80,16 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.0; marg
 }
 
 /* ==================== 4. PRELOADER + LOADING RING ==================== */
-/* The preloader is now just a full-screen veil; the ring sits a little below
-   the vertical center so the .wordmark (below) can occupy the center above it. */
+/* A full-screen veil with the progress ring. The name (section 5) sits
+   centered just above the ring while loading, as one group. */
 .preloader {
   position: fixed; inset: 0; z-index: 100;
   background: var(--bg);
 }
-/* Arriving from a section page (#home): no loader, no intro morph — the home
+/* Arriving from a section page (#home): no loader, no intro glide — the home
    appears already settled. */
 html.skip-loader .preloader { display: none; }
 html.skip-loader .wordmark { transition: none; }
-html.skip-loader .wordmark-loading { display: none; }
 
 #theme-transition{
     position:fixed;
@@ -99,8 +110,9 @@ html.skip-loader .wordmark-loading { display: none; }
 }
 
 .loader-ring {
-  position: fixed; left: 50%; top: 35%; z-index: 101;
-  width: 104px; height: 104px; transform: translate(-50%, 4.2rem);
+  position: fixed; left: 50%; z-index: 101;
+  top: calc(var(--load-top) + var(--name-size) + var(--load-gap));   /* right under the name */
+  width: var(--ring); height: var(--ring); transform: translateX(-50%);
 }
 .loader-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); } /* start the fill at 12 o'clock */
 .loader-ring__track { fill: none; stroke: var(--line); stroke-width: 2; }
@@ -115,149 +127,23 @@ html.skip-loader .wordmark-loading { display: none; }
   font-family: var(--grotesk); font-size: 0.95rem; letter-spacing: 0.06em; color: var(--ink-soft);
 }
 
-/* ==================== 5. WORDMARK (curved 3D name on the drum's rim) ==================== */
-/* Resting: the name sits on the drum's top rim, curved in 3D (per-letter — JS
-   sets each letter's rotateY/translateZ so the ends bow outward). While loading
-   it drops toward center and grows; on reveal it rises to the rim. .wordmark
-   provides the perspective + the loader->reveal morph; .wordmark__curve holds
-   the 3D letters. */
+/* ==================== 5. WORDMARK ==================== */
+/* One name for both states. Resting: its bottom sits --name-gap above the
+   drum's top edge. While loading it's shifted down to sit just above the ring;
+   removing body.is-loading glides it up into place as the drum fades in. */
 .wordmark {
   position: fixed; left: 0; right: 0; z-index: 102; margin: 0;
-  top: 22.5vh;                                /* resting: on the drum's upper rim (tuned live) */
-  text-align: center; pointer-events: none; user-select: none;
-  perspective: 900px; perspective-origin: 50% 42%;
-  transform: translateY(0) scale(1);        /* resting */
-  transition: transform 1100ms var(--ease);
+  top: var(--rest-top);
+  font-family: var(--serif); font-weight: 400;
+  font-size: var(--name-size); line-height: 1;
+  letter-spacing: 0.02em; white-space: nowrap; text-align: center;
+  color: var(--ink);
+  -webkit-text-stroke: 1.5px currentColor;   /* fuller weight (Instrument Serif has no bold) */
+  pointer-events: none; user-select: none;
+  transition: transform 1100ms var(--ease), color var(--theme-fade) var(--ease);
   will-change: transform;
-  opacity:0;
-    transition:
-        opacity 450ms var(--ease),
-        transform 1100ms var(--ease);
 }
-.wordmark-loading {
-    opacity : 1;
-    transition:opacity 450ms var(--ease);
-    position: fixed;
-    left: 50%;
-    top: 22.5vh;
-
-    transform: translateX(-50%);
-
-    z-index: 103;
-
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(3.4rem, 9vw, 6rem);
-    line-height: 1;
-    letter-spacing: 0.02em;
-
-    color: var(--ink);
-
-    pointer-events: none;
-    user-select: none;
-}
-
-.hero-video{
-    position:fixed;
-
-    left:50%;
-    /* Anchor to the SAME line as the wordmark (its top), so they stay locked
-       together on any screen. The name's line is .wordmark's `top` below. */
-    top:22.75vh;
-
-    /* -100% sits the video's BOTTOM on that line (just above the name).
-       Make it more negative (e.g. -110%) to open a small gap. */
-    transform:translate(-32%, -135%) rotate(2.5deg);
-
-    width:clamp(180px, 18vw, 100px);
-
-    z-index:50;
-
-    border-radius:18px;
-
-    overflow:hidden;
-}
-
-.hero-video video{
-    width:100%;
-    display:block;
-}
-
-.wordmark__curve {
-  display: inline-block; position: relative; transform-style: preserve-3d;
-  font-family: var(--serif); font-weight: 400; line-height: 1;
-  color: var(--ink); white-space: nowrap;
-  font-size: clamp(3rem, 8.5vw, 6rem);
-  letter-spacing: 0.04em;
-  -webkit-text-stroke: 1.5px currentColor;  /* fatten Instrument Serif (no bold weight) */
-  transition: color 800ms var(--ease);
-  text-shadow: 0 0 0.35px currentColor;
-  /* JS sets: transform: translateZ(-RADIUS) rotateX(6deg) */
-}
-/* Navy on the beige loader; cream once it's resting on the navy drum (matches
-   the section title, so it stays readable and seamless). */
-
-body:not(.is-loading) .wordmark__curve {
-    color: var(--ink);   /* dark in light mode */
-}
-
-/* Flat wordmark: only during loading */
-body:not(.is-loading) .wordmark-loading {
-    opacity:0;
-    pointer-events:none;
-}
-
-/* Curved wordmark: hidden during loading */
-body.is-loading .wordmark {
-    opacity:0;
-}
-body:not(.is-loading) .wordmark {
-    opacity: 1;
-}
-
-/* But when dark mode is active, make it light */
-:root[data-theme="dark"] body:not(.is-loading) .wordmark__curve {
-    color: var(--panel-text);
-}   
-
-.ch { display: inline-block; position: relative; transform-origin: 50% 50%; }
-.ch--sp { width: 0.32em; }                  /* the space between "R." and "Rajesh" */
-/* A slim line whose BOTTOM rests on the tops of the "ajes" letters. Drawn
-   per-letter so it curves along with them in 3D. */
-
-/* .bar::before {
-  content: ""; position: absolute; left: -0.05em; right: -0.05em;
-  top: 0.34em; height: 0.07em; background: currentColor; border-radius: 999px;
-} */
-
-.bar::before{
-    content:"";
-    position:absolute;
-
-    /* extend into neighboring letters */
-    left:-0.16em;
-    right:-0.16em;
-
-    /* move up/down */
-    top:0.31em;
-
-    /* thickness */
-    height:0.03em;
-
-    background:currentColor;
-
-    border-radius:999px;
-
-    opacity:1;
-    transition:opacity 1000ms var(--ease) 500ms;
-}
-
-body.is-loading .bar::before{
-    opacity:0;
-}
-
-/* While loading: drop toward center + grow (curve stays); clears the ring below. */
-body.is-loading .wordmark { transform: translateY(14vh) scale(1.4); }
+body.is-loading .wordmark { transform: translateY(calc(var(--load-top) - var(--rest-top))); }
 
 /* ==================== 6. WEBGL STAGE ==================== */
 /* Fixed + full-viewport: the drum stays put while the .scroll-track scrolls
@@ -268,8 +154,8 @@ body.is-loading .wordmark { transform: translateY(14vh) scale(1.4); }
 /* A soft contact shadow just under the band, to ground the drum in space
    (replaces the old readable mirror) */
 .floor-sheen {
-  position: absolute; left: 50%; top: 72%; z-index: 3;
-  width: min(680px, 72vw); height: 96px; transform: translate(-50%, -50%);
+  position: absolute; left: 50%; top: var(--drum-bottom, 76vh); z-index: 3;
+  width: min(780px, 80vw); height: 100px; transform: translate(-50%, -50%);
   pointer-events: none;
   background: radial-gradient(ellipse at center, rgba(8, 15, 26, 0.30), transparent 72%);
   filter: blur(18px);
@@ -310,13 +196,16 @@ body.is-loading .dock { opacity: 0; }
 /* Spin is driven by wheel/drag now (no scroll track). The hint just tells the
    visitor the drum responds to scroll, then retires on first input. */
 .scroll-hint {
-  position: fixed; left: 50%; bottom: calc(var(--space-4) + 96px); z-index: 9;
+  position: fixed; left: 50%; z-index: 9;
+  /* just under the drum, but never down into the dock */
+  top: min(calc(var(--drum-bottom, 76vh) + 30px), calc(100vh - var(--space-4) - 104px));
   transform: translateX(-50%);
   font-family: var(--grotesk); font-size: 0.7rem; letter-spacing: 0.18em;
   text-transform: uppercase; color: var(--ink-soft); pointer-events: none;
   transition: opacity 500ms var(--ease);
 }
 body:not(.motion-ok) .scroll-hint { display: none; }
+@media (max-height: 600px) { .scroll-hint { display: none; } }   /* no room under the drum */
 .scroll-hint.is-hidden { opacity: 0; }
 
 /* ==================== 7. DOCK ==================== */
@@ -362,7 +251,7 @@ body:not(.motion-ok) .scroll-hint { display: none; }
   display: flex; align-items: center; justify-content: space-between;
   padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--line);
 }
-.topbar__brand { font-family: var(--serif); font-size: 1.4rem; color: var(--ink); }
+.topbar__brand { font-family: var(--serif); font-size: 1.4rem; color: var(--ink); white-space: nowrap; }
 .topbar__brand:hover { text-decoration: none; }
 .topbar__right { display: flex; align-items: center; gap: var(--space-2); }
 .topbar__home { color: var(--ink-soft); font-size: 0.95rem; }
@@ -420,21 +309,40 @@ body:not(.motion-ok) .scroll-hint { display: none; }
 body.has-toggled .mode-toggle { display: none; }
 
 /* The hanging lightbulb: drops in once, then STAYS as the persistent toggle.
+   It hangs centered over the name, and the rope auto-sizes so the bulb always
+   stops --bulb-gap above "Rahul Rajesh" on any screen.
    ---- EDIT THESE ----
-   size          -> .bulb-glass width
-   how far hangs -> .bulb-rope height
-   screen spot   -> #lightbulb top / left
+   size          -> --bulb-w (in :root)
+   gap above name-> --bulb-gap (in :root)
    drop distance -> js/main.js dropBulbToDark() y value */
 #lightbulb {
-  position: fixed; left: 44%; top: 0; z-index: 10000;
+  position: fixed; left: 50%; top: 0; z-index: 10000;
   transform: translateX(-50%);
   display: none; flex-direction: column; align-items: center;
   color: var(--ink); pointer-events: none;
 }
 #lightbulb.dropped { display: flex; pointer-events: auto; cursor: pointer; }
+#lightbulb { transition: opacity 600ms var(--ease); }
+body.is-loading #lightbulb { opacity: 0; }   /* appears with the home, not over the loader */
 #lightbulb.dropping { color: rgba(255, 255, 255, 0.5); } /* faint unlit outline while it hangs in the dark */
-.bulb-rope { width: 2px; height: 2.2rem; background: currentColor; opacity: 0.5; }
-.bulb-glass { width: 30px; height: auto; margin-top: -1px; transform: rotate(180deg); } /* base up (hanging) */
+.bulb-rope {
+  width: 2px; background: currentColor; opacity: 0.5;
+  /* name top - gap - bulb height (glass is 1.5x as tall as it is wide) */
+  height: max(0.6rem, calc(var(--rest-top) - var(--bulb-gap) - var(--bulb-w) * 1.5));
+}
+.bulb-glass { width: var(--bulb-w); height: auto; margin-top: -1px; transform: rotate(180deg); } /* base up (hanging) */
+
+/* A soft pool of light spilling from the bulb onto the name (dark mode only) */
+#lightbulb::after {
+  content: ""; position: absolute; left: 50%; top: 100%;
+  width: min(820px, 92vw); height: 380px;
+  transform: translate(-50%, -38%);                  /* centered just below the glass */
+  /* closest-side keeps the glow fully faded inside the box, so no hard edges */
+  background: radial-gradient(closest-side, rgba(255, 243, 220, 0.14), rgba(255, 243, 220, 0.05) 55%, transparent);
+  pointer-events: none; opacity: 0;
+  transition: opacity 900ms var(--ease);
+}
+:root[data-theme="dark"] #lightbulb.dropped:not(.dropping)::after { opacity: 1; }
 /* Glows in dark mode, dim in light — follows the theme automatically */
 :root[data-theme="dark"] #lightbulb { color: #fff7ec; }   /* whiter light */
 :root[data-theme="dark"] #lightbulb .bulb-glass {
@@ -652,6 +560,64 @@ body.has-toggled .mode-toggle { display: none; }
 }
 .slider__dot.is-active { background: var(--accent); transform: scale(1.25); }
 
+/* ---- Photo grid (Academic) — 1, 2, or 3 across; js/gallery.js sets data-count ---- */
+.gallery {
+  --cols: 3;
+  display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 10px;
+  margin-top: var(--space-3); max-width: 680px;
+}
+.gallery[data-count="2"] { --cols: 2; }
+.gallery[data-count="1"] { --cols: 1; max-width: 560px; }
+.gallery__item {
+  display: block; padding: 0; margin: 0; cursor: zoom-in;
+  aspect-ratio: 4 / 3; overflow: hidden;
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px;
+  transition: border-color 200ms var(--ease), transform 300ms var(--ease), box-shadow 300ms var(--ease);
+}
+.gallery[data-count="1"] .gallery__item { aspect-ratio: auto; }   /* a lone photo keeps its own shape */
+.gallery__item img { width: 100%; height: 100%; object-fit: cover; transition: transform 500ms var(--ease); }
+.gallery__item:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 10px 24px rgba(13, 27, 42, 0.12); }
+.gallery__item:hover img { transform: scale(1.03); }
+.gallery__item:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 560px) {
+  .gallery { --cols: 2; }
+  .gallery[data-count="1"] { --cols: 1; }
+  .gallery[data-count="3"] .gallery__item:first-child { grid-column: span 2; aspect-ratio: 16 / 9; }
+}
+
+/* ---- Lightbox: full-size, uncropped view ---- */
+.lightbox {
+  position: fixed; inset: 0; z-index: 20000;
+  display: grid; place-items: center; padding: 64px 72px;
+  background: rgba(8, 15, 26, 0.9); backdrop-filter: blur(6px);
+  opacity: 0; transition: opacity 220ms var(--ease);
+}
+.lightbox[hidden] { display: none; }
+.lightbox.is-open { opacity: 1; }
+.lightbox__figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.lightbox__img {
+  max-width: min(1200px, calc(100vw - 144px)); max-height: calc(100vh - 150px);
+  object-fit: contain; border-radius: 8px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+.lightbox__count { font-family: var(--grotesk); font-size: 0.78rem; letter-spacing: 0.12em; color: rgba(244, 239, 230, 0.7); }
+.lightbox__btn {
+  position: absolute; width: 44px; height: 44px; display: grid; place-items: center; padding: 0;
+  font-size: 1.6rem; line-height: 1; color: #f4efe6; cursor: pointer;
+  background: rgba(244, 239, 230, 0.08); border: 1px solid rgba(244, 239, 230, 0.2); border-radius: 50%;
+  transition: background 180ms var(--ease);
+}
+.lightbox__btn:hover { background: rgba(244, 239, 230, 0.18); }
+.lightbox__close { top: 18px; right: 18px; }
+.lightbox__nav { top: 50%; transform: translateY(-50%); }
+.lightbox__nav--prev { left: 18px; }
+.lightbox__nav--next { right: 18px; }
+.lightbox.is-single .lightbox__nav { display: none; }
+@media (max-width: 560px) {
+  .lightbox { padding: 56px 12px; }
+  .lightbox__img { max-width: calc(100vw - 24px); }
+  .lightbox__nav { top: auto; bottom: 18px; transform: none; }
+}
+
 /* ==================== 8d. POSTS (blog + journey) ==================== */
 .posts { padding-block: var(--space-5) var(--space-6); max-width: 820px; }
 .page-lead {
@@ -696,8 +662,13 @@ body.has-toggled .mode-toggle { display: none; }
 }
 @media (max-width: 640px) {
   .container { padding-inline: var(--space-3); }
-  .wordmark__curve { letter-spacing: 0.02em; font-size: clamp(2rem, 10vw, 3rem); }
-  body.is-loading .wordmark { transform: translateY(12vh) scale(1.35); }
+  :root { --name-size: clamp(2rem, 11vw, 3rem); --bulb-w: 26px; }
+  /* top bar: fit name + icons on one line (the name itself links home) */
+  .topbar { padding: var(--space-2) var(--space-3); }
+  .topbar__brand { font-size: 1.2rem; }
+  .topbar__home { display: none; }
+  .topbar__right { gap: 0.25rem; }
+  .social { width: 30px; height: 30px; }
   .dock { width: calc(100% - var(--space-4)); }
   .dock__main { flex: 1; }
   .dock__label { font-size: 1.2rem; }

@@ -8,8 +8,10 @@
    never hits a stop or reverses at an "end" — it just keeps turning.
 
    The section NAME shows as crisp HTML in the page (js/main.js); panels carry
-   only a faint index number. Rahul's name is a separate CSS-3D masthead that
-   sits on the drum's top rim (also in the page, not here).
+   the section photo. Rahul's name is a separate CSS-3D masthead that sits on
+   the drum's top rim (also in the page, not here). To seat it, this file
+   publishes the drum's on-screen top/bottom edges as CSS vars --drum-top and
+   --drum-bottom (px).
 
    Exposes window.RRScene = { spin, settle, rotateTo, reveal, refreshTheme,
    onActiveChange, SEG }. Everything is optional: if WebGL/Three fails, main.js
@@ -33,6 +35,8 @@ const SEG = (Math.PI * 2) / N;      // arc per panel
 const GAP_ANGLE = SEG * 0.08;       // gap between panels so it reads as a segmented drum
 const CORE_R = R * 0.9;             // dark inner core, seen through the gaps as a recessed shadow
 const EASE = 0.12;                  // how quickly currentY chases targetY each frame
+const CAM_Z = 9;                    // camera distance (landscape) — smaller = bigger drum
+const CAM_Z_PORTRAIT = 12.2;        // pulled back on tall/narrow screens so the drum fits
 
 let renderer, scene, camera, drum;
 let ready = false;
@@ -112,7 +116,7 @@ function init() {
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
-  camera.position.set(0, 0, 10);
+  camera.position.set(0, 0, CAM_Z);
 
   const build = () => {
     drum = new THREE.Group();
@@ -136,9 +140,20 @@ function resize() {
   const h = canvas.clientHeight || window.innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
-  // pull the camera back on tall/narrow (portrait) screens so the taller drum fits
-  camera.position.z = camera.aspect < 1 ? 13.5 : 10;
+  camera.position.z = camera.aspect < 1 ? CAM_Z_PORTRAIT : CAM_Z;
   camera.updateProjectionMatrix();
+  publishDrumEdges(h);
+}
+
+/* Screen-space y (px) of the drum's front top + bottom rim — the highest and
+   lowest points of the band on screen. The page seats the name just above the
+   top edge and the contact shadow / hint just below the bottom edge. */
+function publishDrumEdges(h) {
+  const dist = camera.position.z - R;                               // camera -> front of drum
+  const ndc = (H / 2) / (dist * Math.tan((camera.fov * Math.PI / 180) / 2));
+  const s = document.documentElement.style;
+  s.setProperty("--drum-top", ((1 - ndc) / 2 * h).toFixed(1) + "px");
+  s.setProperty("--drum-bottom", ((1 + ndc) / 2 * h).toFixed(1) + "px");
 }
 
 /* -------- section-center angle math -------- */

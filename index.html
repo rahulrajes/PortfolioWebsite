@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>R. Rajesh</title>
+  <title>Rahul Rajesh</title>
   <meta name="description" content="Rahul Rajesh — student, researcher, and photographer at ASU." />
 
   <!-- Respect the saved theme so dark mode carries across pages; a fresh
@@ -74,23 +74,9 @@
   </div>
 
   <!-- ===================== WORDMARK =====================
-       Centered + large during load; on reveal it rises onto the drum's top rim
-       and curves in 3D (per-letter, so the ends bow outward). The "j" uses the
-       dotless glyph "ȷ" (U+0237); "ajes" carry .bar for the line over them. -->
-
-  <div class="wordmark-loading" aria-hidden="true">
-    R. Rajesh
-  </div>
-
-  <div class="hero-video">
-    <video id="heroVideo" autoplay muted loop playsinline>
-        <source src="assets/video/light.mp4" type="video/mp4">
-    </video>
-  </div>
-
-  <div class="wordmark" id="wordmark" aria-label="R. Rajesh">
-    <span class="wordmark__curve" aria-hidden="true"><span class="ch">R</span><span class="ch">.</span><span class="ch ch--sp"></span><span class="ch">R</span><span class="ch bar">a</span><span class="ch bar">ȷ</span><span class="ch bar">e</span><span class="ch bar">s</span><span class="ch">h</span></span>
-  </div>
+       One element for both states: centered above the loading ring while the
+       page loads, then it glides up to sit just above the drum on reveal. -->
+  <h1 class="wordmark" id="wordmark">Rahul Rajesh</h1>
 
   <!-- ===================== DARK-MODE TOGGLE (corner) ===================== -->
   <button class="mode-toggle" id="theme-toggle" type="button" aria-label="Switch theme">

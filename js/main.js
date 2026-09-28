@@ -4,7 +4,6 @@
      B. Preloader          (ring + count, then reveal)          — landing only
      C. Spin               (scroll/drag -> infinite rotation)   — landing only
      D. Nav / dock         (label + title + arrows + open)      — landing only
-     E. Curved wordmark     (per-letter 3D on the drum's rim)   — landing only
 
    The WebGL drum lives in js/scene.js and exposes window.RRScene. This file
    degrades gracefully: if the scene never loads (or motion is reduced), the
@@ -18,24 +17,11 @@ let current = 0;                       // active section index, shared across B�
 let swapTimer = null;
 
 /* ---- A. THEME TOGGLE (lightbulb dark-mode narrative) ---- */
-function setHeroVideo(theme) {
-  const v = document.getElementById("heroVideo");
-  if (!v) return;
-  const src = theme === "dark" ? "assets/video/night.mp4" : "assets/video/light.mp4";
-  const s = v.querySelector("source");
-  if (!s || s.getAttribute("src") === src) return;
-  s.setAttribute("src", src);
-  v.load();
-  const p = v.play();
-  if (p && p.catch) p.catch(() => {});
-}
-
 function applyTheme(theme) {
   const root = document.documentElement;
   if (theme === "dark") root.setAttribute("data-theme", "dark");
   else root.removeAttribute("data-theme");
   try { localStorage.setItem("theme", theme); } catch (e) { /* private mode */ }
-  setHeroVideo(theme);
   if (window.RRScene && window.RRScene.refreshTheme) window.RRScene.refreshTheme();
 }
 
@@ -106,7 +92,6 @@ function initThemeToggle() {
   // Theme was already applied to <html> by the inline <head> script from
   // localStorage; sync the rest of the UI to match it.
   const startDark = document.documentElement.getAttribute("data-theme") === "dark";
-  setHeroVideo(startDark ? "dark" : "light");
 
   // If we're loading straight into dark (came back from another page, or a
   // reload), skip the one-time drop: the bulb is already hanging + lit.
@@ -178,6 +163,9 @@ function initPreloader() {
     document.body.classList.remove("is-loading");
     if (window.RRScene && window.RRScene.reveal) window.RRScene.reveal();
     if (window.gsap) {
+      // ring clears first so it never sits over the drum as the veil lifts
+      const ring = preloader.querySelector(".loader-ring");
+      if (ring) window.gsap.to(ring, { opacity: 0, duration: 0.25, ease: "power1.out" });
       window.gsap.to(preloader, { opacity: 0, duration: 0.7, ease: "power2.out",
         onComplete: () => { preloader.hidden = true; } });
     } else {
@@ -275,60 +263,9 @@ function initDock() {
   });
 }
 
-/* ---- E. CURVED WORDMARK (per-letter 3D, sitting on the drum's top curve) ----
-   Places each letter on a shallow cylinder: middle letters face front, the ends
-   rotate + recede outward. Tunable; adjust STEP/RADIUS to match the drum. ---- */
-function curveWordmark() {
-  const wrap = document.querySelector(".wordmark__curve");
-  if (!wrap) return;
-  const chars = Array.prototype.slice.call(wrap.querySelectorAll(".ch"));
-  if (!chars.length) return;
-
-  const RADIUS = window.innerWidth < 640 ? 220 : 340;   // px — arc radius
-  const STEP = 8;                                       // degrees per width-unit
-  const OFFSETS = {
-    "R": 0,
-    ".": 0,
-    "a": 0,
-    "ȷ": -10,
-    "e": -22,
-    "s": -25,
-    "h": -27
-};
-
-  // proportional widths so the spacing reads naturally (space + period are narrower)
-  const unit = (ch) => ch.classList.contains("ch--sp") ? 0.55 : (ch.textContent === "." ? 0.4 : 1);
-  const widths = chars.map(unit);
-  const total = widths.reduce((a, b) => a + b, 0);
-
-  wrap.style.position = "relative";
-  let acc = 0;
-  chars.forEach((ch, i) => {
-    const centerUnit = acc + widths[i] / 2;
-    acc += widths[i];
-    const theta = (centerUnit - total / 2) * STEP;     // angle of this letter on the cylinde
-    // fan every letter out from a shared axis: same origin, rotate, then push out
-    ch.style.position = "absolute";
-    ch.style.left = "50%";
-    ch.style.top = "50%";
-    const xOffset = OFFSETS[ch.textContent] ?? 0;
-
-ch.style.transform =
-    `translate(calc(-50% + ${xOffset}px), -50%)
-     rotateY(${theta}deg)
-     translateZ(${RADIUS}px)`;
-  });
-
-  // pull the whole arc back so the front letter sits near z=0, and tilt it as if
-  // the name were lying on the drum's top surface
-  wrap.style.transform = `translateZ(${-RADIUS}px) rotateX(7deg)`;
-}
-
 document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle();
   initPreloader();
-  curveWordmark();
   initSpin();             // sets body.motion-ok when active
   initDock();             // reads body.motion-ok
-  window.addEventListener("resize", curveWordmark);
 });
