@@ -3,7 +3,7 @@
    --------------------------------------------------------------------------
    Reads content/<collection>.json and renders posts newest-first into the
    same dropdown (accordion) format as the Academic page. A post with images
-   gets an image slider (reusing js/slider.js). Posts are authored from the
+   gets a photo grid with a lightbox (js/gallery.js). Posts are authored from the
    private studio editor; this file only renders.
 
    The page provides a mount element: <div data-posts="blog"></div>
@@ -55,9 +55,9 @@
       body.appendChild(prose);
 
       if (Array.isArray(p.images) && p.images.length) {
-        var slider = buildSlider(p.images);
-        body.appendChild(slider);
-        if (window.RRSlider) window.RRSlider.init(slider);
+        var grid = buildGallery(p.images, p.title || "");
+        body.appendChild(grid);
+        if (window.RRGallery) window.RRGallery.init(grid);
       }
 
       d.appendChild(sum);
@@ -69,25 +69,19 @@
     mount.appendChild(acc);
   }
 
-  function buildSlider(images) {
-    var wrap = document.createElement("div");
-    wrap.className = "slider";
-    wrap.setAttribute("data-slider", "");
-    var vp = document.createElement("div");
-    vp.className = "slider__viewport";
-    var track = document.createElement("div");
-    track.className = "slider__track";
+  function buildGallery(images, title) {
+    var grid = document.createElement("div");
+    grid.className = "gallery";
+    grid.setAttribute("data-gallery", "");
     images.forEach(function (src) {
-      var fig = document.createElement("figure");
-      fig.className = "slider__slide";
+      var btn = document.createElement("button");
+      btn.type = "button"; btn.className = "gallery__item";
       var img = document.createElement("img");
-      img.src = src; img.loading = "lazy"; img.alt = "";
-      fig.appendChild(img);
-      track.appendChild(fig);
+      img.src = src; img.loading = "lazy"; img.alt = title;
+      btn.appendChild(img);
+      grid.appendChild(btn);
     });
-    vp.appendChild(track);
-    wrap.appendChild(vp);
-    return wrap;
+    return grid;
   }
 
   function formatDate(d) {
