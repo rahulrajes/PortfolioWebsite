@@ -199,6 +199,8 @@ function hideHint() {
 function initSpin() {
   if (reduceMotion || !window.RRScene || !window.RRScene.spin || N < 2) return false;
   document.body.classList.add("motion-ok");
+  const hint = document.querySelector("#scrollHint");
+  if (hint && window.matchMedia("(hover: none)").matches) hint.textContent = "Swipe to spin";   // phones
   window.RRScene.onActiveChange = setActive;
 
   const K = 0.0016;                 // wheel pixels -> radians
