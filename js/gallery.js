@@ -7,7 +7,8 @@
    next, Esc to close, arrow keys, and swipe on phones.
 
    Grids in the page at load are wired automatically. Grids built later (blog
-   and journey posts from js/posts.js) call RRGallery.init(node).
+   and journey posts from js/posts.js) call RRGallery.init(node). Other code
+   can open the viewer on any list with RRGallery.open([{ src, alt }], i).
 
    Markup:
      <div class="gallery" data-gallery>
@@ -98,6 +99,13 @@
     });
   }
 
-  window.RRGallery = { init: init };
+  /* ---- open the viewer straight from code (photography carousel) ----
+     list = [{ src, alt }], i = which one to show first */
+  function openList(list, i) {
+    if (!box) buildLightbox();
+    open(list, i || 0);
+  }
+
+  window.RRGallery = { init: init, open: openList };
   Array.prototype.forEach.call(document.querySelectorAll("[data-gallery]"), init);
 })();
