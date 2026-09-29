@@ -421,16 +421,24 @@ body.is-loading #lightbulb { opacity: 0; }   /* appears with the home, not over 
 .about-block--ideas { max-width: 72ch; }
 .about-block--ideas .prose { max-width: none; }
 
-/* Ideas + Off-the-clock text on the left; snowboard photo on the right,
-   spanning the full height of both blocks.
-   WIDTH knob -> .about-sidephoto grid-template-columns (2nd value = photo width) */
+/* Mirror of the "right now" block above: text (top) + volleyball photo
+   (bottom) on the LEFT, the tall snowboard photo on the RIGHT stretching to
+   the left column's full height, so both photos' bottoms line up.
+   WIDTH knob -> grid-template-columns (2nd value = snowboard photo width) */
 .about-sidephoto {
-  display: grid; grid-template-columns: 1fr 0.55fr;
+  display: grid; grid-template-columns: 1fr 1fr;
   gap: var(--space-5); align-items: stretch;
   margin-bottom: var(--space-6);
 }
-.about-sidephoto__col .about-block:last-child { margin-bottom: 0; }
+.about-sidephoto__col { display: flex; flex-direction: column; }
+/* ideas + hobbies read as one piece: normal paragraph spacing between them */
+.about-sidephoto__col .about-block { margin-bottom: 0; }
+.about-sidephoto__col .about-block + .about-block { margin-top: 1.3rem; }
+/* Volleyball photo (bottom-left), same shape as the squad photo above */
+.about-sidephoto__col .about-sidephoto__under { margin-top: var(--space-4); aspect-ratio: 3 / 2; }
+.about-sidephoto__under img { object-position: 50% 35%; }   /* keep everyone's heads in frame */
 .about-sidephoto__img { position: relative; height: 100%; }
+.about-sidephoto__img img { object-position: 60% 50%; }     /* keep the wave + board tip in frame */
 .about-sidephoto__img img { position: absolute; inset: 0; }
 
 /* Figures: framed, subtle hover zoom */
