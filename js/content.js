@@ -35,7 +35,9 @@
   const slots = document.querySelectorAll("[data-content]");
   slots.forEach((el) => {
     const src = el.getAttribute("data-content");
-    fetch(src)
+    // "no-cache": always ask the server if the text changed, so edits show up
+    // right away instead of after GitHub Pages' 10-minute browser cache
+    fetch(src, { cache: "no-cache" })
       .then((r) => { if (!r.ok) throw new Error(r.status + " " + src); return r.text(); })
       .then((text) => {
         const paras = text.trim().split(/\n\s*\n/);            // blank line = new paragraph
