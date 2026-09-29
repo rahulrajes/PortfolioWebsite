@@ -49,18 +49,6 @@
       "h": 1600
     },
     {
-      "card": "assets/img/photography/web/wildlife/card/20250814-063027000-ios.jpg",
-      "full": "assets/img/photography/web/wildlife/full/20250814-063027000-ios.jpg",
-      "w": 2400,
-      "h": 1600
-    },
-    {
-      "card": "assets/img/photography/web/wildlife/card/20250814-063034950-ios.jpg",
-      "full": "assets/img/photography/web/wildlife/full/20250814-063034950-ios.jpg",
-      "w": 2400,
-      "h": 1600
-    },
-    {
       "card": "assets/img/photography/web/wildlife/card/img-0036.jpg",
       "full": "assets/img/photography/web/wildlife/full/img-0036.jpg",
       "w": 2400,
@@ -338,6 +326,18 @@
     }
   ],
   "other": [
+    {
+      "card": "assets/img/photography/web/other/card/20250814-063027000-ios.jpg",
+      "full": "assets/img/photography/web/other/full/20250814-063027000-ios.jpg",
+      "w": 2400,
+      "h": 1600
+    },
+    {
+      "card": "assets/img/photography/web/other/card/20250814-063034950-ios.jpg",
+      "full": "assets/img/photography/web/other/full/20250814-063034950-ios.jpg",
+      "w": 2400,
+      "h": 1600
+    },
     {
       "card": "assets/img/photography/web/other/card/img-0147.jpg",
       "full": "assets/img/photography/web/other/full/img-0147.jpg",
