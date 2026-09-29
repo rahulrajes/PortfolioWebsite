@@ -16,8 +16,10 @@
      - unloaded cards are dark (not light gray) on the black page
      - onOpen(index) hook for the lightbox; Esc is left to the lightbox when open
      - no darkening: photos keep their original colors and brightness (the
-       original's color-space mismatch, center dim, and white haze are gone);
-       the lens still bends the edges and keeps its thin blue rim
+       original's color-space mismatch, center dim, and white haze are gone)
+     - glassMode "frame" (default): instead of one lens in the middle, every
+       card gets its own thin glass edge (see FRAME LOOK). "lens" brings back
+       the original single lens (see LENS LOOK).
 
    Usage (ES module; needs "three" in the page's import map):
      import { createCarousel } from "./glass-carousel.js";
@@ -241,6 +243,77 @@ const lensFragmentShader = `
   }
 `;
 
+/* ---- per-card glass frame (glassMode "frame") ----
+   Each photo is its own pane of glass: a thin bevel around the edge bends
+   the photo inward, splits color slightly, and catches a soft highlight on
+   the top-left rim. Everything inside the bevel is the untouched photo. */
+const frameVertexShader = `
+  varying vec2 vUv;
+  void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
+`;
+
+const frameFragmentShader = `
+  precision highp float;
+  varying vec2 vUv;
+  uniform sampler2D map;
+  uniform float uHasMap;
+  uniform vec3  uColor;        // unloaded card color
+  uniform vec2  uSize;         // card size on screen, px
+  uniform vec2  uRepeat;       // crop window (from the texture's repeat/offset)
+  uniform vec2  uOffset;
+  uniform float uRadius;       // corner radius, px
+  uniform float uBand;         // bevel width, px
+  uniform float uBend;         // how far the bevel pulls the photo inward, px
+  uniform float uDisp;         // color split, as a fraction of uBend
+  uniform float uRim;          // rim light strength
+  uniform vec3  uRimColor;
+
+  float sdBox(vec2 p, vec2 b, float r){
+    vec2 q = abs(p) - b + r;
+    return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r;
+  }
+  vec3 photo(vec2 uv){ return texture2D(map, clamp(uv, 0.0, 1.0) * uRepeat + uOffset).rgb; }
+
+  void main(){
+    vec2 hb = uSize * 0.5;
+    vec2 p = (vUv - 0.5) * uSize;                 // px from the card's center
+    float r = min(uRadius, min(hb.x, hb.y));
+    float sd = sdBox(p, hb, r);                  // < 0 inside
+    float d = -sd;                                // px in from the edge
+    if (d <= 0.0) discard;
+    float edgeA = clamp(d, 0.0, 1.0);            // 1px anti-aliased edge
+
+    if (uHasMap < 0.5) { gl_FragColor = vec4(uColor, edgeA); return; }
+
+    // outward direction at this point (gradient of the box shape)
+    vec2 e = vec2(0.75, 0.0);
+    vec2 n = normalize(vec2(sdBox(p + e.xy, hb, r) - sdBox(p - e.xy, hb, r),
+                            sdBox(p + e.yx, hb, r) - sdBox(p - e.yx, hb, r)) + 1e-6);
+
+    // small cards (during the intro) get a proportionally thinner edge
+    float band = min(uBand, 0.07 * min(uSize.x, uSize.y));
+    float bend = uBend * band / max(uBand, 0.001);
+    float t = 1.0 - clamp(d / max(band, 0.001), 0.0, 1.0);    // 0 inside the bevel .. 1 at the edge
+    float k = t * t;                                          // curved bevel profile
+    vec2 pull = -n * k * bend / uSize;                        // bend toward the middle
+
+    // Sample the same way on every pixel. (An if/else here made the GPU pick a
+    // blurrier copy of the photo along the bevel's inner edge, which showed up
+    // as a faint rectangle inside each card.)
+    vec3 col;
+    col.r = photo(vUv + pull * (1.0 + uDisp)).r;
+    col.g = photo(vUv + pull).g;
+    col.b = photo(vUv + pull * (1.0 - uDisp)).b;
+
+    // light: a hairline along the very edge, plus a soft glint on the top-left bevel
+    float line  = exp(-pow((d - 1.2) / 0.9, 2.0));
+    float glint = pow(max(dot(n, normalize(vec2(-0.6, 0.8))), 0.0), 2.0) * k;
+    col += uRimColor * uRim * (line * 0.55 + glint * 0.35);
+
+    gl_FragColor = vec4(min(col, vec3(1.0)), edgeA);
+  }
+`;
+
 /* ---- card sizing: "image" keeps each photo's own shape (no cropping);
         "same" crops every card to CARD_W x panel height like the demo ---- */
 const hash01 = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
@@ -286,13 +359,40 @@ function makeParams(opts) {
       growDelay: 0.25, growDuration: 2.15, growStagger: 0.085, outward: false, lensBloom: 1.4,
     },
 
+    /* ---- GLASS STYLE ----
+       "frame": a glass edge around every photo (current look)
+       "lens":  one big lens fixed in the middle that photos slide under (Originkit's look) */
+    glassMode: "frame",
+
+    /* ---- FRAME LOOK (glassMode "frame"): edit these to tune the glass edge ---- */
+    frame: {
+      band: 16,             // width of the glass edge, px (0 = no glass)
+      bend: 9,              // how far the edge pulls the photo inward, px
+      dispersion: 0.35,     // rainbow split at the edge (0 = none)
+      rim: 0.8,             // brightness of the edge highlight (0 = none)
+      rimColor: "#eef4ff",  // highlight color
+      radius: 8,            // corner rounding, px
+    },
+
+    /* ---- LENS LOOK (glassMode "lens"): edit these to tune the big lens ----
+       The originals from Originkit's base preset are in [brackets]. */
     lens: {
-      square: false, round: 0, sizeX: 0.565, sizeY: 1, posX: 0.5, posY: 0.5,
-      rotation: 65, spin: 0, zoom: 0, dispersion: 11, blur: 0,
-      glow: 3, whiteGlow: 0, novaSize: 12,     // whiteGlow 0: no milky haze over the photo
-      ring: 1, ringRadius: 0.49, ringWidth: 0.014, ringColor: "#009dff",
-      shimmer: true, shimmerFreq: 12, shimmerSpeed: 3.5, shimmerDepth: 0.12,
-      rimStart: 0.578, rimTangential: 0.6, rimInward: 0, rimFreq1: 2, rimFreq2: 1,
+      sizeX: 0.8,          // lens width (bigger = the bend stays farther out)   [0.565]
+      sizeY: 1,             // lens height                                        [1]
+      rotation: 65,          // tilt in degrees; 0 = upright oval                  [65]
+      rimStart: 0.578,       // where bending starts, 0 center .. 1 edge; higher = only the rim bends  [0.578]
+      rimTangential: 0.3,  // how hard the rim warps the photo                   [0.6]
+      dispersion: 11,        // rainbow color fringe at the rim                    [11]
+      ring: 1,            // brightness of the thin rim light (0 = none)        [1]
+      ringWidth: 0.014,     // thickness of the rim light                         [0.014]
+      ringColor: "#009dff", // rim light color                                     [#009dff]
+      shimmer: false,       // rim light flickers around the edge                 [true]
+
+      // rarely touched
+      square: false, round: 0, posX: 0.5, posY: 0.5, spin: 0, zoom: 0, blur: 0,
+      glow: 3, whiteGlow: 0, novaSize: 12, ringRadius: 0.49,
+      shimmerFreq: 12, shimmerSpeed: 3.5, shimmerDepth: 0.12,
+      rimInward: 0, rimFreq1: 2, rimFreq2: 1,
       rimLine: 0, rimLinePos: 0.488, rimLineWidth: 0.003,
       vignette: 0, vignetteSize: 0.3, samples: 16,
     },
@@ -537,7 +637,7 @@ export function createCarousel(mount, opts = {}) {
 
     for (let r = 0; r < REPEATS; r++) {
       for (let i = 0; i < sources.length; i++) {
-        const mat = new THREE.MeshBasicMaterial({ color: pp.cardColor, transparent: true });
+        const mat = makeCardMaterial();
         const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 1, 1), mat);
         mesh.visible = false;
         scene.add(mesh);
@@ -573,6 +673,32 @@ export function createCarousel(mount, opts = {}) {
     }
     if (!N) boot();
     else pump(gen);
+  }
+
+  // one glass-frame material per card (they all share one compiled shader)
+  const FR = pp.frame;
+  const rimColor = new THREE.Color(FR.rimColor);
+  const cardColor = new THREE.Color(pp.cardColor);
+  function makeCardMaterial() {
+    return new THREE.ShaderMaterial({
+      vertexShader: frameVertexShader,
+      fragmentShader: frameFragmentShader,
+      transparent: true,
+      uniforms: {
+        map: { value: null },
+        uHasMap: { value: 0 },
+        uColor: { value: cardColor },
+        uSize: { value: new THREE.Vector2(1, 1) },
+        uRepeat: { value: new THREE.Vector2(1, 1) },
+        uOffset: { value: new THREE.Vector2(0, 0) },
+        uRadius: { value: FR.radius },
+        uBand: { value: pp.glassMode === "frame" ? FR.band : 0 },
+        uBend: { value: FR.bend },
+        uDisp: { value: FR.dispersion },
+        uRim: { value: pp.glassMode === "frame" ? FR.rim : 0 },
+        uRimColor: { value: rimColor },
+      },
+    });
   }
 
   function syncWindows() {
@@ -624,12 +750,13 @@ export function createCarousel(mount, opts = {}) {
       const h = cardHeight(i) * shrink;
       const wPx = widthAt(i, h);
 
+      const U = p.mat.uniforms;
       if (src.tex && !p.bound) {
-        p.mat.map = src.tex;
-        p.mat.color.set(0xffffff);
-        p.mat.needsUpdate = true;
+        U.map.value = src.tex;
+        U.uHasMap.value = 1;
         p.bound = true;
       }
+      if (src.tex) { U.uRepeat.value.copy(src.tex.repeat); U.uOffset.value.copy(src.tex.offset); }
 
       let y = 0;
       const isFocused = focusState.active && focusState.poolIdx === poolIdx;
@@ -680,6 +807,7 @@ export function createCarousel(mount, opts = {}) {
 
       p.mesh.position.set(finalX, finalY, 0);
       p.mesh.scale.set(Math.max(1, finalW), Math.max(1, finalH), 1);
+      U.uSize.value.set(Math.max(1, finalW), Math.max(1, finalH));   // keeps the glass edge a fixed px width
 
       const sx = centerX + W / 2;
       const sy = H / 2 - y;
@@ -1009,10 +1137,15 @@ export function createCarousel(mount, opts = {}) {
     }
 
     syncLens(now);
-    renderer.setRenderTarget(rt);
-    renderer.render(scene, camera);
-    renderer.setRenderTarget(null);
-    renderer.render(lensScene, lensCam);
+    if (pp.glassMode === "lens") {
+      renderer.setRenderTarget(rt);
+      renderer.render(scene, camera);
+      renderer.setRenderTarget(null);
+      renderer.render(lensScene, lensCam);
+    } else {
+      renderer.setRenderTarget(null);                 // frame mode: cards carry their own glass
+      renderer.render(scene, camera);
+    }
   }
 
   let raf = 0;
