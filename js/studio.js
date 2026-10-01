@@ -222,10 +222,13 @@
       // upload staged images sequentially, collecting their paths
       var paths = existingImages.slice();
       var chain = Promise.resolve();
-      newImages.forEach(function (b64) {
+      // Every upload gets a fresh, never-used name. (Numbering 1, 2, 3... broke
+      // when editing a post after removing a photo: the next number could
+      // point at a file that already existed, and GitHub refused the upload.)
+      var stamp = Date.now().toString(36);
+      newImages.forEach(function (b64, k) {
         chain = chain.then(function () {
-          var n = paths.length + 1;
-          var path = "assets/img/" + coll + "/" + id + "/" + n + ".jpg";
+          var path = "assets/img/" + coll + "/" + id + "/" + stamp + "-" + (k + 1) + ".jpg";
           return ghPut(path, b64, null, "studio: image " + path).then(function () { paths.push(path); });
         });
       });
