@@ -188,7 +188,9 @@ function initPreloader() {
   }, 55);
 }
 
-/* ---- C. SPIN (scroll / trackpad / drag -> infinite rotation) ----
+/* ---- C. SPIN (sideways scroll / swipe -> infinite rotation) ----
+   Only LEFT/RIGHT input spins the drum: a sideways trackpad swipe (or
+   Shift + mouse wheel) on computers, a left/right finger swipe on phones.
    Feeds input deltas into RRScene.spin() (unbounded, so it never hits a stop),
    and calls settle() shortly after input stops so a section lands centered.
    Returns true when active (motion enabled). -------- */
@@ -200,7 +202,7 @@ function initSpin() {
   if (reduceMotion || !window.RRScene || !window.RRScene.spin || N < 2) return false;
   document.body.classList.add("motion-ok");
   const hint = document.querySelector("#scrollHint");
-  if (hint && window.matchMedia("(hover: none)").matches) hint.textContent = "Swipe to spin";   // phones
+  if (hint && window.matchMedia("(hover: none)").matches) hint.textContent = "Swipe sideways to spin";   // phones
   window.RRScene.onActiveChange = setActive;
 
   const K = 0.0016;                 // wheel pixels -> radians
@@ -210,25 +212,29 @@ function initSpin() {
     settleTimer = window.setTimeout(() => window.RRScene.settle(), 150);
   }
 
-  // wheel / trackpad — hijack page scroll to spin the drum (single-screen landing)
+  // trackpad / wheel — sideways only. Shift + wheel counts as sideways (some
+  // browsers report it as deltaY). Up/down scrolling is ignored.
   window.addEventListener("wheel", (e) => {
-    e.preventDefault();
-    window.RRScene.spin(-e.deltaY * K);   // scroll down -> advance forward through sections
+    e.preventDefault();                   // single-screen landing: never scroll the page
+    const dx = e.deltaX || (e.shiftKey ? e.deltaY : 0);
+    if (!dx) return;
+    window.RRScene.spin(-dx * K);         // swipe/scroll left -> advance forward through sections
     afterInput();
     hideHint();
   }, { passive: false });
 
-  // touch drag to spin
-  let lastY = null;
-  window.addEventListener("touchstart", (e) => { lastY = e.touches[0].clientY; hideHint(); }, { passive: true });
+  // touch: drag a finger left/right to spin
+  let lastX = null;
+  window.addEventListener("touchstart", (e) => { lastX = e.touches[0].clientX; }, { passive: true });
   window.addEventListener("touchmove", (e) => {
-    if (lastY == null) return;
-    const y = e.touches[0].clientY;
-    window.RRScene.spin(-(lastY - y) * K * 3.5);
-    lastY = y;
+    if (lastX == null) return;
+    const x = e.touches[0].clientX;
+    if (x !== lastX) hideHint();
+    window.RRScene.spin(-(lastX - x) * K * 3.5);
+    lastX = x;
     afterInput();
   }, { passive: true });
-  window.addEventListener("touchend", () => { lastY = null; if (window.RRScene) window.RRScene.settle(); });
+  window.addEventListener("touchend", () => { lastX = null; if (window.RRScene) window.RRScene.settle(); });
 
   return true;
 }
