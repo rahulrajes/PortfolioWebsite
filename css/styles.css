@@ -465,11 +465,17 @@ body.is-loading #lightbulb { opacity: 0; }   /* appears with the home, not over 
 @media (max-width: 720px) {
   .about-hero,
   .about-block--media { grid-template-columns: 1fr; }
-  /* Stacked: give the absolutely-filled photos an explicit shape/height. */
-  .about-portrait { height: auto; aspect-ratio: 4 / 5; max-width: 340px; justify-self: start; }
-  .about-media__tall { height: auto; aspect-ratio: 4 / 3; }
+  /* Stacked: give the absolutely-filled photos an explicit shape AND width.
+     Their <img> is absolutely positioned, so the box has no content width of
+     its own; without width: 100% Safari shrinks it to nothing (photo vanishes). */
+  .about-portrait,
+  .about-media__tall,
+  .about-sidephoto__img { width: 100%; height: auto; justify-self: stretch; }
+  .about-portrait { aspect-ratio: 4 / 5; }
+  .about-media__tall { aspect-ratio: 4 / 5; }
   .about-sidephoto { grid-template-columns: 1fr; }
-  .about-sidephoto__img { height: auto; aspect-ratio: 4 / 5; max-width: 340px; }
+  .about-sidephoto__img { aspect-ratio: 4 / 5; }
+  /* stacked order on phones: text, volleyball, snowboard */
 }
 
 /* ==================== 8c. ACADEMIC PAGE (accordions) ==================== */
@@ -700,11 +706,29 @@ body.void {
   .topbar__brand { font-size: 1.2rem; }
   .topbar__home { display: none; }
   .topbar__right { gap: 0.25rem; }
-  .social { width: 30px; height: 30px; }
-  .dock { width: calc(100% - var(--space-4)); }
-  .dock__main { flex: 1; }
+  .social { width: 36px; height: 36px; }     /* bigger tap targets */
   .dock__label { font-size: 1.2rem; }
   .dock__thumb { width: 44px; height: 44px; }
   .dock__enter { width: 56px; height: 56px; }
   .footer { flex-direction: column; }
+
+  /* ---- Home screen on phones (laptops never see any of this) ----
+     The drum's on-screen edges come from js/scene.js (--drum-top/--drum-bottom),
+     which on phones also centers name + drum + hint between toggle and dock. */
+  /* iPhone Safari's 100vh includes the area under its toolbars; dvh is the
+     part you can actually see, so things center in the visible screen. */
+  @supports (height: 100dvh) {
+    :root { --load-top: calc(50dvh - (var(--name-size) + var(--load-gap) + var(--ring)) / 2); }
+    .stage { height: 100dvh; }
+  }
+  .wordmark { -webkit-text-stroke-width: 1px; }   /* same visual weight as desktop at the smaller size */
+  /* section title + View sit in the middle of the drum, wherever it is */
+  .section-name { top: calc((var(--drum-top, 50vh) + var(--drum-bottom, 50vh)) / 2); gap: var(--space-2); }
+  .section-name__label { font-size: clamp(2.4rem, 12vw, 3.2rem); }
+  .scroll-hint { top: calc(var(--drum-bottom, 70vh) + 24px); }
+  /* dock: hugs its contents (no dead space on the right), clear of the home bar */
+  .dock { width: max-content; max-width: calc(100% - var(--space-4)); bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px)); }
+  .dock__main { gap: var(--space-2); padding-right: 0.6rem; }
+  .dock__meta { min-width: 6.4rem; padding-right: 0; }     /* width stays put as labels change */
+  .dock__arrow { width: 40px; height: 40px; }
 }

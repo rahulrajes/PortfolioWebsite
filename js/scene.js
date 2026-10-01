@@ -30,13 +30,19 @@ const PANEL_BOTTOM = "#0d1b2a";
 
 const N = SECTIONS.length;
 const R = 3.15;                     // drum radius
-const H = 1.9;                      // panel height — a taller band now
+const H_DESKTOP = 1.9;              // panel height on laptops/desktops
+const H_PHONE = 2.45;               // taller panels on phones so they suit a tall, narrow screen
+const PHONE_MQ = window.matchMedia("(max-width: 640px)");   // same breakpoint as the CSS phone block
+let phone = PHONE_MQ.matches;
+let H = phone ? H_PHONE : H_DESKTOP;
 const SEG = (Math.PI * 2) / N;      // arc per panel
 const GAP_ANGLE = SEG * 0.08;       // gap between panels so it reads as a segmented drum
 const CORE_R = R * 0.9;             // dark inner core, seen through the gaps as a recessed shadow
 const EASE = 0.12;                  // how quickly currentY chases targetY each frame
 const CAM_Z = 9;                    // camera distance (landscape) — smaller = bigger drum
 const CAM_Z_PORTRAIT = 12.2;        // pulled back on tall/narrow screens so the drum fits
+const PHONE_PANEL_FILL = 0.8;       // phones: front panel spans 80% of the screen width
+const PHONE_TOP_RESERVE = 76;       // phones: px kept clear at the top for the theme toggle
 
 let renderer, scene, camera, drum;
 let ready = false;
@@ -44,6 +50,7 @@ let revealed = false;
 let currentY = angleFor(0);         // eased rotation actually applied to the drum
 let targetY = currentY;             // goal rotation (spin/settle move this)
 let lastActive = 0;
+let shiftY = 0;                     // phones: px the drum is moved down (+) or up (-) from center
 
 if (canvas && N > 0) {
   try { init(); } catch (e) { console.warn("WebGL scene disabled:", e); }
@@ -66,7 +73,10 @@ function drawEdges(ctx, c) {
    the photo is drawn in on load (cover-cropped) + a navy scrim + the edge haze. */
 function makeTexture(index, imgSrc) {
   const c = document.createElement("canvas");
-  c.width = 1024; c.height = 640;
+  // Desktop keeps its original 1024x640; phones match the taller panel's shape
+  // so the photo isn't stretched.
+  c.width = 1024;
+  c.height = phone ? Math.round(1024 * H / (R * (SEG - GAP_ANGLE))) : 640;
   const ctx = c.getContext("2d");
 
   const g = ctx.createLinearGradient(0, 0, 0, c.height);
@@ -119,16 +129,34 @@ function init() {
   camera.position.set(0, 0, CAM_Z);
 
   const build = () => {
+    if (drum) {                                   // rebuilding (phone <-> desktop switch)
+      scene.remove(drum);
+      drum.traverse((o) => {
+        if (o.geometry) o.geometry.dispose();
+        if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); }
+      });
+    }
     drum = new THREE.Group();
     drum.add(makeCore());
     for (let i = 0; i < N; i++) drum.add(makePanel(i));
     drum.rotation.y = currentY;
     scene.add(drum);
+    const first = !ready;
     ready = true;
-    if (revealed) playReveal();
+    if (first && revealed) playReveal();         // intro plays once, not on a rebuild
+    if (phone) resize();                         // fonts are in now: re-measure name + dock
   };
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(build);
   else build();
+
+  // Crossing the phone breakpoint (rotating a tablet, resizing a window):
+  // rebuild the drum at the other panel height, then re-fit the camera.
+  PHONE_MQ.addEventListener("change", (e) => {
+    phone = e.matches;
+    H = phone ? H_PHONE : H_DESKTOP;
+    if (ready) build();
+    resize();
+  });
 
   resize();
   window.addEventListener("resize", resize);
@@ -140,9 +168,36 @@ function resize() {
   const h = canvas.clientHeight || window.innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
-  camera.position.z = camera.aspect < 1 ? CAM_Z_PORTRAIT : CAM_Z;
+  if (phone) fitPhone(w, h);
+  else {
+    camera.position.z = camera.aspect < 1 ? CAM_Z_PORTRAIT : CAM_Z;
+    camera.clearViewOffset();
+    shiftY = 0;
+  }
   camera.updateProjectionMatrix();
   publishDrumEdges(h);
+}
+
+/* Phones only: back the camera off until the front panel fills
+   PHONE_PANEL_FILL of the width, then slide the whole picture vertically so
+   name + drum + hint sit centered between the theme toggle and the dock. */
+function fitPhone(w, h) {
+  const tanV = Math.tan((camera.fov * Math.PI / 180) / 2);
+  const tanH = tanV * camera.aspect;
+  const halfChord = R * Math.sin((SEG - GAP_ANGLE) / 2);
+  camera.position.z = R + (halfChord / PHONE_PANEL_FILL) / tanH;
+
+  const halfDrum = (H / 2) / ((camera.position.z - R) * tanV) * h / 2;   // px
+  const mark = document.querySelector("#wordmark");
+  const nameH = mark ? parseFloat(getComputedStyle(mark).fontSize) : 40;
+  const dock = document.querySelector(".dock");
+  const dockTop = dock ? dock.getBoundingClientRect().top : h - 110;
+  const above = halfDrum + 14 + nameH;          // drum center -> top of the name
+  const below = halfDrum + 44;                  // drum center -> bottom of the hint
+  const top = PHONE_TOP_RESERVE, bottom = dockTop - 12;
+  const center = (top + above + bottom - below) / 2;
+  shiftY = Math.round(center - h / 2);
+  camera.setViewOffset(w, h, 0, -shiftY, w, h);
 }
 
 /* Screen-space y (px) of the drum's front top + bottom rim — the highest and
@@ -152,8 +207,8 @@ function publishDrumEdges(h) {
   const dist = camera.position.z - R;                               // camera -> front of drum
   const ndc = (H / 2) / (dist * Math.tan((camera.fov * Math.PI / 180) / 2));
   const s = document.documentElement.style;
-  s.setProperty("--drum-top", ((1 - ndc) / 2 * h).toFixed(1) + "px");
-  s.setProperty("--drum-bottom", ((1 + ndc) / 2 * h).toFixed(1) + "px");
+  s.setProperty("--drum-top", ((1 - ndc) / 2 * h + shiftY).toFixed(1) + "px");
+  s.setProperty("--drum-bottom", ((1 + ndc) / 2 * h + shiftY).toFixed(1) + "px");
 }
 
 /* -------- section-center angle math -------- */
