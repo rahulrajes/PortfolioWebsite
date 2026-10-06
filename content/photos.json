@@ -423,13 +423,6 @@
       "name": "img-0365"
     },
     {
-      "card": "assets/img/photography/web/other/card/img-0366.jpg",
-      "full": "assets/img/photography/web/other/full/img-0366.jpg",
-      "w": 1600,
-      "h": 2400,
-      "name": "img-0366"
-    },
-    {
       "card": "assets/img/photography/web/other/card/img-0368.jpg",
       "full": "assets/img/photography/web/other/full/img-0368.jpg",
       "w": 1600,
@@ -598,5 +591,7 @@
       "name": "img-9989"
     }
   ],
-  "removed": []
+  "removed": [
+    "img-0366"
+  ]
 }
