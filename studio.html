@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <style>
     body.studio { background: var(--bg); }
+    .studio [hidden] { display: none !important; }   /* "hidden" wins over display rules below */
     .studio__wrap { max-width: 1000px; margin-inline: auto; padding: var(--space-4); }
     .studio__card {
       background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px;
@@ -57,6 +58,25 @@
     .studio__row strong { color: var(--ink); font-weight: 600; }
     .studio__row span { color: var(--ink-soft); font-size: 0.9rem; }
     @media (max-width: 720px) { .studio__grid { grid-template-columns: 1fr; } }
+
+    /* tabs: Posts | Photos */
+    .studio__tabs { display: inline-flex; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); }
+    .studio__tab { border: none; background: none; font: inherit; font-weight: 600; color: var(--ink-soft); padding: 0.35rem 0.9rem; border-radius: 999px; cursor: pointer; }
+    .studio__tab[aria-selected="true"] { background: var(--accent); color: #fff; }
+
+    /* Photos panel */
+    .ph__bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+    .ph__count { color: var(--ink-soft); font-size: 0.9rem; }
+    .ph__upload { border: 1px dashed var(--line); border-radius: 6px; padding: var(--space-3); margin-bottom: var(--space-3); }
+    .ph__save { position: sticky; top: 8px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+      background: var(--bg); border: 1px solid var(--accent); border-radius: 6px; padding: 0.5rem 0.75rem; margin-bottom: var(--space-3); }
+    .ph__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .ph__tile { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--bg); }
+    .ph__tile img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: var(--bg-2); }
+    .ph__tools { display: flex; justify-content: space-between; padding: 2px; }
+    .ph__tools button { flex: 1; border: none; background: none; cursor: pointer; font: inherit; font-size: 0.85rem; color: var(--ink-soft); padding: 0.35rem 0; border-radius: 4px; }
+    .ph__tools button:hover { background: var(--bg-2); color: var(--ink); }
+    .ph__tools button.is-danger:hover { color: #c0392b; }
   </style>
 </head>
 <body class="studio">
@@ -88,8 +108,12 @@
     <section id="editor" class="studio__card" hidden>
       <div class="studio__topbar">
         <h1 class="studio__logo">Studio</h1>
+        <div class="studio__tabs" role="tablist">
+          <button class="studio__tab" type="button" role="tab" data-tab="posts" aria-selected="true">Posts</button>
+          <button class="studio__tab" type="button" role="tab" data-tab="photos" aria-selected="false">Photos</button>
+        </div>
         <div class="studio__actions">
-          <label style="margin:0;">Collection
+          <label id="collectionWrap" style="margin:0;">Collection
             <select id="collection">
               <option value="blog">Blog</option>
               <option value="journey">Journey</option>
@@ -99,6 +123,7 @@
         </div>
       </div>
 
+      <div id="postsPanel">
       <div class="studio__grid">
         <div class="studio__form">
           <input type="hidden" id="editId" />
@@ -127,6 +152,41 @@
       <div class="studio__posts">
         <h2 class="studio__subhead">Published &mdash; <span id="collLabel">Blog</span></h2>
         <div id="postList" class="studio__list"></div>
+      </div>
+      </div>
+
+      <!-- PHOTOS: the photography page's Wildlife / Other sets -->
+      <div id="photosPanel" hidden>
+        <div class="ph__bar">
+          <label style="margin:0;">Set
+            <select id="phSet">
+              <option value="wildlife">Wildlife</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <span id="phCount" class="ph__count"></span>
+        </div>
+
+        <div class="ph__upload">
+          <label class="studio__filebtn">Add photos to <span id="phSetName">Wildlife</span><input id="phInput" type="file" accept="image/*" multiple hidden /></label>
+          <p class="studio__help">Full-quality originals are fine. Each photo is resized here (2400px full + 900px card), turned upright, and stripped of location data before upload. New photos go to the front of the set.</p>
+          <div id="phThumbs" class="studio__thumbs"></div>
+          <div class="studio__actions">
+            <button id="phUploadBtn" class="studio__btn" type="button" hidden>Upload</button>
+            <button id="phClearBtn" class="studio__link" type="button" hidden>Clear</button>
+          </div>
+        </div>
+
+        <div id="phSave" class="ph__save" hidden>
+          <span id="phSaveText">Unsaved changes</span>
+          <span>
+            <button id="phSaveBtn" class="studio__btn" type="button">Save</button>
+            <button id="phDiscardBtn" class="studio__link" type="button">Discard</button>
+          </span>
+        </div>
+
+        <p id="phMsg" class="studio__msg"></p>
+        <div id="phGrid" class="ph__grid"></div>
       </div>
     </section>
 
