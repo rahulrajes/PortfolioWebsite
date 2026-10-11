@@ -3,7 +3,8 @@
    --------------------------------------------------------------------------
    Reads content/<collection>.json and renders posts newest-first into the
    same dropdown (accordion) format as the Academic page. A post with images
-   gets a photo grid with a lightbox (js/gallery.js). Posts are authored from the
+   gets a slideshow (js/slideshow.js); clicking a photo opens it full size in
+   the lightbox (js/gallery.js). Posts are authored from the
    private studio editor; this file only renders.
 
    The page provides a mount element: <div data-posts="blog"></div>
@@ -55,9 +56,15 @@
       body.appendChild(prose);
 
       if (Array.isArray(p.images) && p.images.length) {
-        var grid = buildGallery(p.images, p.title || "");
-        body.appendChild(grid);
-        if (window.RRGallery) window.RRGallery.init(grid);
+        if (window.RRSlideshow) {                     // one big photo at a time (js/slideshow.js)
+          var show = window.RRSlideshow.create(p.images, p.title || "");
+          body.appendChild(show);
+          d.addEventListener("toggle", function () { if (d.open) show.refit(); });
+        } else {                                      // fallback: the photo grid
+          var grid = buildGallery(p.images, p.title || "");
+          body.appendChild(grid);
+          if (window.RRGallery) window.RRGallery.init(grid);
+        }
       }
 
       d.appendChild(sum);

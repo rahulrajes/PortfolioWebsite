@@ -621,6 +621,62 @@ body.is-loading #lightbulb { opacity: 0; }   /* appears with the home, not over 
 }
 .post__body + .gallery { margin-top: var(--space-4); }
 
+/* Post photos: one big photo at a time (js/slideshow.js). Each photo keeps
+   its own shape; the frame's height eases to fit it. */
+.slides { margin-top: var(--space-4); outline: none; }
+.slides:focus-visible .slides__stage { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 8px; }
+.slides__stage {
+  position: relative; height: 340px; overflow: hidden;
+  transition: height 520ms var(--ease);
+  touch-action: pan-y; user-select: none; -webkit-user-select: none;
+}
+.slides__slide {
+  position: absolute; inset: 0; margin: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transform: scale(0.9); pointer-events: none;
+  transition: transform 620ms var(--ease), opacity 620ms var(--ease);
+}
+.slides__slide.is-current { opacity: 1; transform: none; pointer-events: auto; z-index: 2; }
+/* parked just off to the side before sliding in (no animation while parking) */
+.slides__slide.is-in-right { transform: translateX(38%) scale(0.92); transition: none; }
+.slides__slide.is-in-left  { transform: translateX(-38%) scale(0.92); transition: none; }
+/* leaving: drifts away, shrinks a little, fades */
+.slides__slide.is-out-left  { transform: translateX(-28%) scale(0.86); opacity: 0; z-index: 1; }
+.slides__slide.is-out-right { transform: translateX(28%) scale(0.86); opacity: 0; z-index: 1; }
+.slides__slide.is-dragging { transition: none; cursor: grabbing; }
+.slides__img {
+  display: block; max-width: 100%; width: auto; height: auto;
+  border-radius: 8px; box-shadow: 0 18px 40px rgba(13, 27, 42, 0.16);
+  cursor: zoom-in; -webkit-user-drag: none;
+}
+.slides__nav {
+  position: absolute; top: 50%; z-index: 3; transform: translateY(-50%);
+  width: 44px; height: 44px; display: grid; place-items: center; padding: 0;
+  font-size: 1.6rem; line-height: 1; color: var(--ink); cursor: pointer;
+  background: color-mix(in srgb, var(--bg) 82%, transparent); border: 1px solid var(--line); border-radius: 50%;
+  backdrop-filter: blur(6px); opacity: 0;
+  transition: opacity 200ms var(--ease), background 200ms var(--ease), transform 200ms var(--ease);
+}
+.slides__nav--prev { left: 12px; }
+.slides__nav--next { right: 12px; }
+.slides:hover .slides__nav, .slides:focus-within .slides__nav { opacity: 1; }
+.slides__nav:hover { background: var(--bg); transform: translateY(-50%) scale(1.06); }
+@media (hover: none) { .slides__nav { opacity: 1; width: 38px; height: 38px; font-size: 1.4rem; } }
+.slides__bar { display: flex; align-items: center; justify-content: center; gap: var(--space-2); margin-top: var(--space-2); }
+.slides__dots { display: flex; gap: 6px; }
+.slides__dot {
+  width: 8px; height: 8px; padding: 0; border: none; border-radius: 999px; cursor: pointer;
+  background: var(--line); transition: width 300ms var(--ease), background 300ms var(--ease);
+}
+.slides__dot.is-on { width: 22px; background: var(--ink-soft); }
+.slides__count { font-size: 0.78rem; letter-spacing: 0.08em; color: var(--ink-soft); min-width: 3.2em; }
+.slides--single .slides__nav, .slides--single .slides__bar { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .slides__slide, .slides__stage { transition: opacity 150ms linear; }
+  .slides__slide.is-in-right, .slides__slide.is-in-left,
+  .slides__slide.is-out-left, .slides__slide.is-out-right { transform: none; }
+}
+
 /* ==================== 8e. PHOTOGRAPHY (the void) ==================== */
 /* Always black, whatever the site theme. One screen tall: the name, the
    pills, then the carousel fills the rest. */
