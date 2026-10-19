@@ -1,21 +1,5 @@
 [
   {
-    "id": "2026-10-19-testing-xv63",
-    "title": "testing",
-    "date": "2026-10-19",
-    "body": "testing",
-    "images": [
-      {
-        "type": "video",
-        "src": "assets/img/journey/2026-10-19-testing-xv63/mvfo8oa7-1.mp4",
-        "poster": "assets/img/journey/2026-10-19-testing-xv63/mvfo8oa7-1-poster.jpg",
-        "w": 720,
-        "h": 1280
-      }
-    ],
-    "created": "2026-10-19T19:52:51.469Z"
-  },
-  {
     "id": "2026-10-10-new-mexico-balloon-fest-2w67",
     "title": "New Mexico (Balloon Fest)",
     "date": "2026-10-10",
