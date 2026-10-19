@@ -18,6 +18,7 @@
   var newImages = [];              // staged uploads: { kind: "image", b64 } or { kind: "video", ...compressVideo() }
   var existingImages = [];         // media kept when editing: "path.jpg" or { type: "video", src, poster, w, h }
   var editingCreated = null;
+  var editingMedia = [];           // the post's media when it was opened for editing
   var PUBLISHING = false;
 
   var $ = function (id) { return document.getElementById(id); };
@@ -173,7 +174,7 @@
   function clearForm() {
     $("editId").value = ""; $("title").value = ""; $("date").value = todayISO();
     $("body").value = ""; $("preview").innerHTML = "";
-    newImages = []; existingImages = []; editingCreated = null; renderThumbs();
+    newImages = []; existingImages = []; editingCreated = null; editingMedia = []; renderThumbs();
   }
 
   function loadForm(post) {
@@ -181,6 +182,7 @@
     $("date").value = post.date || todayISO(); $("body").value = post.body || "";
     $("preview").innerHTML = window.RRMarkdown.render(post.body || "");
     existingImages = (post.images || []).slice(); newImages = []; editingCreated = post.created || null;
+    editingMedia = (post.images || []).slice();
     renderThumbs();
     window.scrollTo(0, 0);
   }
@@ -228,6 +230,10 @@
     var stamp = Date.now().toString(36);
     var dir = "assets/img/" + coll + "/" + id + "/";
     var media = existingImages.slice(), files = [];
+    // media removed with the x while editing: delete those files too
+    var kept = {};
+    mediaPaths(existingImages).forEach(function (p) { kept[p] = true; });
+    mediaPaths(editId ? editingMedia : []).forEach(function (p) { if (!kept[p]) files.push({ path: p, del: true }); });
     items.forEach(function (m, k) {
       var base = dir + stamp + "-" + (k + 1);
       if (m.kind === "video") {
@@ -260,7 +266,8 @@
   }
 
   /* One commit containing several files, via GitHub's Git Data API.
-     build(headSha) -> [ { path, b64 } | { path, content } ] (may return a Promise).
+     build(headSha) -> [ { path, b64 } | { path, content } | { path, del } | { prefix, del } ]
+     (may return a Promise). Deletes skip anything that isn't in the repo.
      If main moved meanwhile, it rebuilds on top of the new main (uploads are reused). */
   function gitCommit(message, build, onProgress) {
     var tries = 0, blobCache = {};
@@ -271,7 +278,25 @@
         head = ref.object.sha;
         return Promise.all([ghApi("GET", "/git/commits/" + head), build(head)]);
       }).then(function (r) {
-        var baseTree = r[0].tree.sha, list = r[1], entries = [], chain = Promise.resolve();
+        var baseTree = r[0].tree.sha, list = r[1];
+        var needTree = list.some(function (f) { return f.del; });
+        return (needTree ? ghApi("GET", "/git/trees/" + baseTree + "?recursive=1") : Promise.resolve(null))
+          .then(function (t) { return [baseTree, list, t]; });
+      }).then(function (r) {
+        var baseTree = r[0], list = r[1], entries = [], chain = Promise.resolve();
+        if (r[2]) {                                          // turn deletes into tree entries
+          var exists = {}, writing = {}, dels = {};
+          r[2].tree.forEach(function (t) { if (t.type === "blob") exists[t.path] = true; });
+          list.forEach(function (f) { if (!f.del) writing[f.path] = true; });
+          list.forEach(function (f) {
+            if (!f.del) return;
+            Object.keys(exists).forEach(function (p) {
+              if ((f.prefix ? p.indexOf(f.prefix) === 0 : p === f.path) && !writing[p]) dels[p] = true;
+            });
+          });
+          list = list.filter(function (f) { return !f.del; });
+          Object.keys(dels).forEach(function (p) { entries.push({ path: p, mode: "100644", type: "blob", sha: null }); });
+        }
         var total = list.filter(function (f) { return f.b64; }).length, done = 0;
         list.forEach(function (f) {
           chain = chain.then(function () {
@@ -388,13 +413,35 @@
     });
   }
 
+  // file paths a post's media list points to (photos, videos, video posters)
+  function mediaPaths(list) {
+    var out = [];
+    (list || []).forEach(function (m) {
+      if (typeof m === "string") out.push(m);
+      else if (m) { if (m.src) out.push(m.src); if (m.poster) out.push(m.poster); }
+    });
+    return out;
+  }
+
   function deletePost(id, coll) {
-    if (!confirm("Delete this post? (Images stay in the repo but stop showing.)")) return;
-    ghGet("content/" + coll + ".json").then(function (got) {
-      if (!got) return;
-      var arr = JSON.parse(decB64(got.content)).filter(function (p) { return p.id !== id; });
-      return ghPut("content/" + coll + ".json", encB64(JSON.stringify(arr, null, 2) + "\n"), got.sha, "studio: delete post");
-    }).then(function () { loadPosts(); }).catch(function (e) { msg($("status"), e.message, "err"); });
+    if (!confirm("Delete this post and its photos/videos? This can't be undone from the Studio.")) return;
+    msg($("status"), "Deleting…");
+    var title = "";
+    gitCommit("studio: delete post", function (head) {
+      return ghApi("GET", "/contents/content/" + coll + ".json?ref=" + head).then(function (got) {
+        var arr = JSON.parse(decB64(got.content)), post = null;
+        arr = arr.filter(function (p) { if (p.id === id) { post = p; return false; } return true; });
+        title = post ? post.title : "";
+        var files = [{ path: "content/" + coll + ".json", content: JSON.stringify(arr, null, 2) + "\n" }];
+        // the post's whole folder (also catches leftovers from earlier edits) + anything it points to elsewhere
+        files.push({ prefix: "assets/img/" + coll + "/" + id + "/", del: true });
+        mediaPaths(post && post.images).forEach(function (p) { files.push({ path: p, del: true }); });
+        return files;
+      });
+    }).then(function () {
+      msg($("status"), "Deleted" + (title ? " \u201c" + title + "\u201d" : "") + " and its media.", "ok");
+      loadPosts();
+    }).catch(function (e) { msg($("status"), e.message, "err"); });
   }
 
   function bindEditor() {
