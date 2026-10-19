@@ -15,9 +15,10 @@
   var GH = { owner: "rahulrajes", repo: "PortfolioWebsite", branch: "main" };
   var LS_KEY = "rr_studio_v1";
   var TOKEN = null;                 // held in memory only after unlock
-  var newImages = [];              // base64 JPEGs staged for upload
-  var existingImages = [];         // image paths kept when editing
+  var newImages = [];              // staged uploads: { kind: "image", b64 } or { kind: "video", ...compressVideo() }
+  var existingImages = [];         // media kept when editing: "path.jpg" or { type: "video", src, poster, w, h }
   var editingCreated = null;
+  var PUBLISHING = false;
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -149,15 +150,17 @@
   /* ---------- editor ---------- */
   function renderThumbs() {
     var box = $("thumbs"); box.innerHTML = "";
-    existingImages.forEach(function (path, i) {
-      box.appendChild(thumb(path, "existing", i));
+    existingImages.forEach(function (m, i) {
+      var video = typeof m === "object" && m.type === "video";
+      box.appendChild(thumb(video ? m.poster : m, "existing", i, video));
     });
-    newImages.forEach(function (b64, i) {
-      box.appendChild(thumb("data:image/jpeg;base64," + b64, "new", i));
+    newImages.forEach(function (m, i) {
+      var video = m.kind === "video";
+      box.appendChild(thumb("data:image/jpeg;base64," + (video ? m.poster : m.b64), "new", i, video));
     });
   }
-  function thumb(src, kind, i) {
-    var d = document.createElement("div"); d.className = "studio__thumb";
+  function thumb(src, kind, i, video) {
+    var d = document.createElement("div"); d.className = "studio__thumb" + (video ? " is-video" : "");
     var im = document.createElement("img"); im.src = src; d.appendChild(im);
     var x = document.createElement("button"); x.type = "button"; x.className = "studio__thumbx"; x.textContent = "×";
     x.addEventListener("click", function () {
@@ -211,42 +214,178 @@
     var coll = $("collection").value;
     var title = $("title").value.trim();
     if (!title) { msg($("status"), "Give the post a title.", "err"); return; }
+    if (PUBLISHING) return;
     var date = $("date").value || todayISO();
     var body = $("body").value;
     var editId = $("editId").value;
+    var id = editId || makeId(title, date);
+    var items = newImages.slice();
+    PUBLISHING = true; $("publishBtn").disabled = true;
     msg($("status"), "Publishing…");
 
-    ghGet("content/" + coll + ".json").then(function (got) {
-      var arr = got ? JSON.parse(decB64(got.content)) : [];
-      var sha = got ? got.sha : null;
-      var id = editId || makeId(title, date);
+    // Every upload gets a fresh, never-used name (numbering 1, 2, 3... used to
+    // collide with old files after a photo was removed from a post).
+    var stamp = Date.now().toString(36);
+    var dir = "assets/img/" + coll + "/" + id + "/";
+    var media = existingImages.slice(), files = [];
+    items.forEach(function (m, k) {
+      var base = dir + stamp + "-" + (k + 1);
+      if (m.kind === "video") {
+        files.push({ path: base + "." + m.ext, b64: m.b64 }, { path: base + "-poster.jpg", b64: m.poster });
+        media.push({ type: "video", src: base + "." + m.ext, poster: base + "-poster.jpg", w: m.w, h: m.h });
+      } else {
+        files.push({ path: base + ".jpg", b64: m.b64 });
+        media.push(base + ".jpg");
+      }
+    });
 
-      // upload staged images sequentially, collecting their paths
-      var paths = existingImages.slice();
-      var chain = Promise.resolve();
-      // Every upload gets a fresh, never-used name. (Numbering 1, 2, 3... broke
-      // when editing a post after removing a photo: the next number could
-      // point at a file that already existed, and GitHub refused the upload.)
-      var stamp = Date.now().toString(36);
-      newImages.forEach(function (b64, k) {
-        chain = chain.then(function () {
-          var path = "assets/img/" + coll + "/" + id + "/" + stamp + "-" + (k + 1) + ".jpg";
-          return ghPut(path, b64, null, "studio: image " + path).then(function () { paths.push(path); });
-        });
-      });
-
-      return chain.then(function () {
-        var post = { id: id, title: title, date: date, body: body, images: paths,
+    // One commit for the media + the updated post list. Re-reads the list at
+    // the latest main, so it never overwrites a post published meanwhile.
+    gitCommit("studio: publish \"" + title + "\"", function (head) {
+      return ghApi("GET", "/contents/content/" + coll + ".json?ref=" + head).catch(function (e) {
+        if (e.status === 404) return null; throw e;
+      }).then(function (got) {
+        var arr = got ? JSON.parse(decB64(got.content)) : [];
+        var post = { id: id, title: title, date: date, body: body, images: media,
                      created: editId ? (editingCreated || new Date().toISOString()) : new Date().toISOString() };
         var i = arr.findIndex(function (p) { return p.id === id; });
         if (i >= 0) arr[i] = post; else arr.unshift(post);
-        var json = JSON.stringify(arr, null, 2) + "\n";
-        return ghPut("content/" + coll + ".json", encB64(json), sha, "studio: publish \"" + title + "\"");
+        return files.concat([{ path: "content/" + coll + ".json", content: JSON.stringify(arr, null, 2) + "\n" }]);
       });
-    }).then(function () {
+    }, function (done, total) { msg($("status"), "Uploading " + done + " / " + total + "…"); }).then(function () {
       msg($("status"), "Published! It'll appear on the site in ~1 minute.", "ok");
       clearForm(); loadPosts();
-    }).catch(function (e) { msg($("status"), e.message, "err"); });
+    }).catch(function (e) { msg($("status"), e.message, "err"); })
+      .then(function () { PUBLISHING = false; $("publishBtn").disabled = false; });
+  }
+
+  /* One commit containing several files, via GitHub's Git Data API.
+     build(headSha) -> [ { path, b64 } | { path, content } ] (may return a Promise).
+     If main moved meanwhile, it rebuilds on top of the new main (uploads are reused). */
+  function gitCommit(message, build, onProgress) {
+    var tries = 0, blobCache = {};
+    function attempt() {
+      tries++;
+      var head;
+      return ghApi("GET", "/git/ref/heads/" + GH.branch).then(function (ref) {
+        head = ref.object.sha;
+        return Promise.all([ghApi("GET", "/git/commits/" + head), build(head)]);
+      }).then(function (r) {
+        var baseTree = r[0].tree.sha, list = r[1], entries = [], chain = Promise.resolve();
+        var total = list.filter(function (f) { return f.b64; }).length, done = 0;
+        list.forEach(function (f) {
+          chain = chain.then(function () {
+            if (f.content !== undefined) { entries.push({ path: f.path, mode: "100644", type: "blob", content: f.content }); return; }
+            if (blobCache[f.path]) { entries.push({ path: f.path, mode: "100644", type: "blob", sha: blobCache[f.path] }); return; }
+            return ghApi("POST", "/git/blobs", { content: f.b64, encoding: "base64" }).then(function (b) {
+              blobCache[f.path] = b.sha;
+              entries.push({ path: f.path, mode: "100644", type: "blob", sha: b.sha });
+              done++; if (onProgress) onProgress(done, total);
+            });
+          });
+        });
+        return chain.then(function () { return ghApi("POST", "/git/trees", { base_tree: baseTree, tree: entries }); });
+      }).then(function (tree) {
+        return ghApi("POST", "/git/commits", { message: message, tree: tree.sha, parents: [head] });
+      }).then(function (commit) {
+        return ghApi("PATCH", "/git/refs/heads/" + GH.branch, { sha: commit.sha });
+      }).catch(function (e) {
+        if (e.status === 422 && tries < 3) return attempt();
+        throw e;
+      });
+    }
+    return attempt();
+  }
+
+  /* ---------- video: shrink in the browser before upload ----------
+     Plays the clip once (at normal speed, silently) and records it at web
+     size with MediaRecorder: ~1080p for clips up to about a minute, 720p for
+     longer ones, so each file lands around 45 MB at most. Also grabs the first
+     frame as the poster. The tab has to stay visible while it runs. */
+  var VIDEO_MAX_SEC = 300;
+  var AUDIO_CTX = null;
+  function audioCtx() {
+    if (!AUDIO_CTX) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) AUDIO_CTX = new AC();
+    }
+    if (AUDIO_CTX && AUDIO_CTX.state === "suspended") AUDIO_CTX.resume();
+    return AUDIO_CTX;
+  }
+  function pickMime() {
+    var list = ["video/mp4;codecs=avc1.640028,mp4a.40.2", "video/mp4;codecs=avc1,mp4a.40.2", "video/mp4",
+                "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+    for (var i = 0; i < list.length; i++) if (window.MediaRecorder && MediaRecorder.isTypeSupported(list[i])) return list[i];
+    return "";
+  }
+  function blobToB64(blob) {
+    return new Promise(function (resolve, reject) {
+      var fr = new FileReader();
+      fr.onload = function () { resolve(String(fr.result).split(",")[1]); };
+      fr.onerror = reject; fr.readAsDataURL(blob);
+    });
+  }
+  function compressVideo(file, onProgress) {
+    return new Promise(function (resolve, reject) {
+      var mime = pickMime();
+      if (!mime || !HTMLCanvasElement.prototype.captureStream) {
+        reject(new Error("This browser can't process video. Use Chrome or Safari on a computer.")); return;
+      }
+      var url = URL.createObjectURL(file);
+      var v = document.createElement("video");
+      v.playsInline = true; v.preload = "auto"; v.src = url;
+      function fail(text) { URL.revokeObjectURL(url); reject(new Error(text)); }
+      v.onerror = function () { fail("Couldn't read " + file.name + " in this browser (iPhone videos: try Safari)."); };
+      v.onloadedmetadata = function () {
+        var dur = v.duration;
+        if (!isFinite(dur) || dur <= 0) { fail("Couldn't read the length of " + file.name + "."); return; }
+        if (dur > VIDEO_MAX_SEC) { fail(file.name + " is over 5 minutes. Trim it, or post it on YouTube and link it."); return; }
+        var targetBytes = Math.min(45e6, dur * 4e6 / 8);
+        var vbps = Math.max(700e3, targetBytes * 8 / dur - 128e3);
+        var edge = vbps >= 2.5e6 ? 1920 : 1280;
+        var scale = Math.min(1, edge / Math.max(v.videoWidth, v.videoHeight));
+        var w = Math.round(v.videoWidth * scale / 2) * 2, h = Math.round(v.videoHeight * scale / 2) * 2;
+        var c = document.createElement("canvas"); c.width = w; c.height = h;
+        var ctx = c.getContext("2d");
+        var stream = c.captureStream(30);
+        var ac = audioCtx();
+        if (ac) {
+          try {
+            var dest = ac.createMediaStreamDestination();
+            ac.createMediaElementSource(v).connect(dest);       // to the recording only, not the speakers
+            dest.stream.getAudioTracks().forEach(function (t) { stream.addTrack(t); });
+          } catch (e) { /* no audio track: record video only */ }
+        }
+        var rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: Math.round(vbps), audioBitsPerSecond: 128000 });
+        var chunks = [], poster = null;
+        rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+        rec.onstop = function () {
+          URL.revokeObjectURL(url);
+          var out = new Blob(chunks, { type: mime.split(";")[0] });
+          if (out.size > 95e6) { reject(new Error(file.name + " came out too large. Try a shorter clip.")); return; }
+          blobToB64(out).then(function (b64) {
+            resolve({ kind: "video", b64: b64, poster: poster, w: w, h: h, duration: dur,
+                      ext: mime.indexOf("video/mp4") === 0 ? "mp4" : "webm", size: out.size });
+          }, reject);
+        };
+        var useRVFC = "requestVideoFrameCallback" in v;
+        function draw() {
+          ctx.drawImage(v, 0, 0, w, h);
+          if (!poster) {                                        // first frame -> poster (max 1280px)
+            var ps = Math.min(1, 1280 / Math.max(w, h)), pc = document.createElement("canvas");
+            pc.width = Math.round(w * ps); pc.height = Math.round(h * ps);
+            pc.getContext("2d").drawImage(c, 0, 0, pc.width, pc.height);
+            poster = pc.toDataURL("image/jpeg", 0.82).split(",")[1];
+          }
+          if (onProgress) onProgress(Math.min(1, v.currentTime / dur));
+          if (!v.ended) { if (useRVFC) v.requestVideoFrameCallback(draw); else requestAnimationFrame(draw); }
+        }
+        v.onended = function () { ctx.drawImage(v, 0, 0, w, h); window.setTimeout(function () { rec.stop(); }, 120); };
+        rec.start(1000);
+        v.play().then(function () { if (useRVFC) v.requestVideoFrameCallback(draw); else requestAnimationFrame(draw); })
+          .catch(function () { rec.stop(); fail("Couldn't play " + file.name + " to process it."); });
+      };
+    });
   }
 
   function deletePost(id, coll) {
@@ -261,13 +400,28 @@
   function bindEditor() {
     $("collection").addEventListener("change", function () { clearForm(); loadPosts(); });
     $("body").addEventListener("input", function () { $("preview").innerHTML = window.RRMarkdown.render($("body").value); });
+    $("imgInput").addEventListener("click", audioCtx);       // a click lets the browser start audio for video processing
     $("imgInput").addEventListener("change", function (e) {
-      var files = Array.prototype.slice.call(e.target.files);
-      msg($("status"), "Processing images…");
-      Promise.all(files.map(function (f) { return resizeImage(f, 1600); })).then(function (b64s) {
-        b64s.forEach(function (b) { newImages.push(b); });
-        renderThumbs(); msg($("status"), ""); $("imgInput").value = "";
-      }).catch(function () { msg($("status"), "Could not read an image.", "err"); });
+      var files = Array.prototype.slice.call(e.target.files), i = 0, failed = [];
+      $("imgInput").value = "";
+      $("publishBtn").disabled = true;
+      (function next() {                                     // one at a time (videos play through once each)
+        if (i >= files.length) {
+          $("publishBtn").disabled = false;
+          msg($("status"), failed.length ? failed.join(" ") : "", failed.length ? "err" : "");
+          return;
+        }
+        var f = files[i++], label = "(" + i + " of " + files.length + ")";
+        var job = /^video\//.test(f.type) || /\.(mov|mp4|m4v|webm)$/i.test(f.name)
+          ? compressVideo(f, function (p) {
+              msg($("status"), "Preparing video " + label + ": " + Math.round(p * 100) + "%. Keep this tab open and visible.");
+            })
+          : (msg($("status"), "Preparing photo " + label + "…"),
+             resizeImage(f, 1600).then(function (b64) { return { kind: "image", b64: b64 }; }));
+        job.then(function (m) { newImages.push(m); renderThumbs(); })
+          .catch(function (err) { failed.push(err && err.message ? err.message : "Couldn't read " + f.name + "."); })
+          .then(next);
+      })();
     });
     $("publishBtn").addEventListener("click", publish);
     $("clearBtn").addEventListener("click", clearForm);
